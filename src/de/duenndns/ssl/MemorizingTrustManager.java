@@ -20,6 +20,9 @@ import javax.net.ssl.X509TrustManager;
 public class MemorizingTrustManager implements X509TrustManager {
 	final static String TAG = "MemorizingTrustManager";
 
+	static String KEYSTORE_DIR = "KeyStore";
+	static String KEYSTORE_FILE = "KeyStore.bks";
+
 	Activity master;
 	Handler masterHandler;
 	private File keyStoreFile;
@@ -31,12 +34,21 @@ public class MemorizingTrustManager implements X509TrustManager {
 		master = m;
 		masterHandler = new Handler();
 
-		File dir = m.getApplication().getDir("KeyStore", Context.MODE_PRIVATE);
-		keyStoreFile = new File(dir + File.separator + "KeyStore.bks");
+		File dir = m.getApplication().getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
+		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
 
 		appKeyStore = loadAppKeyStore();
 		defaultTrustManager = getTrustManager(null);
 		appTrustManager = getTrustManager(appKeyStore);
+	}
+
+	public static X509TrustManager[] getInstanceList(Activity c) {
+		return new X509TrustManager[] { new MemorizingTrustManager(c) };
+	}
+
+	public static void setKeyStoreFile(String dirname, String filename) {
+		KEYSTORE_DIR = dirname;
+		KEYSTORE_FILE = filename;
 	}
 
 	X509TrustManager getTrustManager(KeyStore ks) {
@@ -215,7 +227,4 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	public static X509TrustManager[] getInstanceList(Activity c) {
-		return new X509TrustManager[] { new MemorizingTrustManager(c) };
-	}
 }
