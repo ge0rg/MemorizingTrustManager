@@ -40,6 +40,16 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+/**
+ * A X509 trust manager implementation which asks the user about invalid
+ * certificates and memorizes their decision.
+ * <p>
+ * The certificate validity is checked using the system default X509
+ * TrustManager, creating a query Dialog if the check fails.
+ * <p>
+ * <b>WARNING:</b> This only works if a dedicated thread is used for
+ * opening sockets!
+ */
 public class MemorizingTrustManager implements X509TrustManager {
 	final static String TAG = "MemorizingTrustManager";
 
@@ -53,6 +63,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 	private X509TrustManager defaultTrustManager;
 	private X509TrustManager appTrustManager;
 
+	/** Creates an instance of the MemorizingTrustManager class.
+	 *
+	 * @param m the Activity to be used for displaying Dialogs.
+	 */
 	public MemorizingTrustManager(Activity m) {
 		master = m;
 		masterHandler = new Handler();
@@ -65,10 +79,34 @@ public class MemorizingTrustManager implements X509TrustManager {
 		appTrustManager = getTrustManager(appKeyStore);
 	}
 
+	/**
+	 * Returns a X509TrustManager list containing a new instance of
+	 * TrustManagerFactory.
+	 *
+	 * This function is meant for convenience only. You can use it
+	 * as follows to integrate TrustManagerFactory for HTTPS sockets:
+	 *
+	 * <pre>
+	 *     SSLContext sc = SSLContext.getInstance("TLS");
+	 *     sc.init(null, MemorizingTrustManager.getInstanceList(this),
+	 *         new java.security.SecureRandom());
+	 *     HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+	 * </pre>
+	 * @param c the Activity to be used for displaying Dialogs.
+	 */
 	public static X509TrustManager[] getInstanceList(Activity c) {
 		return new X509TrustManager[] { new MemorizingTrustManager(c) };
 	}
 
+	/**
+	 * Changes the path for the KeyStore file.
+	 *
+	 * The actual filename relative to the app's directory will be
+	 * <code>app_<i>dirname</i>/<i>filename</i></code>.
+	 *
+	 * @param dirname directory to store the KeyStore.
+	 * @param filename file name for the KeyStore.
+	 */
 	public static void setKeyStoreFile(String dirname, String filename) {
 		KEYSTORE_DIR = dirname;
 		KEYSTORE_FILE = filename;
@@ -84,6 +122,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 				}
 			}
 		} catch (Exception e) {
+			// Here, we are covering up errors. It might be more useful
+			// however to throw them out of the constructor so the
+			// embedding app knows something went wrong.
 			Log.e(TAG, "getTrustManager(" + ks + ")", e);
 		}
 		return null;
