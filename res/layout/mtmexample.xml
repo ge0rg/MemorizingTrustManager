@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent" >
+	<EditText
+		android:id="@+id/url" 
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:hint="HTTPS address"
+		android:text="https://op-co.de/mtm/"
+		android:singleLine="true"
+		/>
+	<Button
+		android:id="@+id/connect" 
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:text="Connect"
+		/>
+	<TextView
+		android:id="@+id/content" 
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:layout_weight="1"
+		android:text="Please enter a HTTPS URL and press 'Connect'!"
+		android:textSize="11pt"
+		/>
+</LinearLayout>
+
