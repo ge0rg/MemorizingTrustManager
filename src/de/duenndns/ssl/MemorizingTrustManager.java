@@ -24,6 +24,8 @@
 package de.duenndns.ssl;
 
 import android.app.Activity;
+import android.app.Application;
+import android.app.Service;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -56,7 +58,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	static String KEYSTORE_DIR = "KeyStore";
 	static String KEYSTORE_FILE = "KeyStore.bks";
 
-	Activity master;
+	Context master;
 	Handler masterHandler;
 	private File keyStoreFile;
 	private KeyStore appKeyStore;
@@ -67,16 +69,33 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 *
 	 * @param m the Activity to be used for displaying Dialogs.
 	 */
-	public MemorizingTrustManager(Activity m) {
+	private MemorizingTrustManager(Application app, Context m) {
 		master = m;
 		masterHandler = new Handler();
 
-		File dir = m.getApplication().getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
+		File dir = app.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
 
 		appKeyStore = loadAppKeyStore();
 		defaultTrustManager = getTrustManager(null);
 		appTrustManager = getTrustManager(appKeyStore);
+	}
+
+	/** Creates an instance of the MemorizingTrustManager class.
+	 *
+	 * @param m the Activity to be used for displaying Dialogs.
+	 */
+	private MemorizingTrustManager(Activity m) {
+		this(m.getApplication(), m);
+	}
+
+
+	/** Creates an instance of the MemorizingTrustManager class.
+	 *
+	 * @param m the Service to be used for displaying Dialogs.
+	 */
+	private MemorizingTrustManager(Service m) {
+		this(m.getApplication(), m);
 	}
 
 	/**
@@ -96,6 +115,16 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 */
 	public static X509TrustManager[] getInstanceList(Activity c) {
 		return new X509TrustManager[] { new MemorizingTrustManager(c) };
+	}
+
+	/**
+	 * Returns a X509TrustManager list containing a new instance of
+	 * TrustManagerFactory.
+	 *
+	 * This is equivalent to getInstanceList(Activity), but for Services.
+	 */
+	public static X509TrustManager[] getInstanceList(Service s) {
+		return new X509TrustManager[] { new MemorizingTrustManager(s) };
 	}
 
 	/**
