@@ -3,6 +3,9 @@
  *
  * Copyright (c) 2010 Georg Lukas <georg@op-co.de>
  *
+ * MemorizingTrustManager.java contains the actual trust manager and interface
+ * code to create a MemorizingActivity and obtain the results.
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -25,11 +28,18 @@ package de.duenndns.ssl;
 
 import android.app.Activity;
 import android.app.Application;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
 import android.util.Log;
 import android.os.Handler;
 
@@ -38,6 +48,7 @@ import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -54,11 +65,21 @@ import javax.net.ssl.X509TrustManager;
  */
 public class MemorizingTrustManager implements X509TrustManager {
 	final static String TAG = "MemorizingTrustManager";
+	final static String DECISION_INTENT = "de.duenndns.ssl.DECISION";
+	final static String DECISION_INTENT_ID     = DECISION_INTENT + ".decisionId";
+	final static String DECISION_INTENT_CERT   = DECISION_INTENT + ".cert";
+	final static String DECISION_INTENT_CHOICE = DECISION_INTENT + ".decisionChoice";
+	private final static int NOTIFICATION_ID = 100509;
 
 	static String KEYSTORE_DIR = "KeyStore";
 	static String KEYSTORE_FILE = "KeyStore.bks";
 
 	Context master;
+	NotificationManager notificationManager;
+	private static int decisionId = 0;
+	private static HashMap<Integer,MTMDecision> openDecisions = new HashMap();
+	private static BroadcastReceiver decisionReceiver;
+
 	Handler masterHandler;
 	private File keyStoreFile;
 	private KeyStore appKeyStore;
@@ -72,6 +93,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	private MemorizingTrustManager(Application app, Context m) {
 		master = m;
 		masterHandler = new Handler();
+		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		File dir = app.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
@@ -79,6 +101,13 @@ public class MemorizingTrustManager implements X509TrustManager {
 		appKeyStore = loadAppKeyStore();
 		defaultTrustManager = getTrustManager(null);
 		appTrustManager = getTrustManager(appKeyStore);
+
+		if (decisionReceiver == null) {
+			decisionReceiver = new BroadcastReceiver() {
+				public void onReceive(Context ctx, Intent i) { interactResult(i); }
+			};
+			master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT));
+		}
 	}
 
 	/** Creates an instance of the MemorizingTrustManager class.
@@ -237,88 +266,97 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return defaultTrustManager.getAcceptedIssuers();
 	}
 
-	public void interact(final X509Certificate[] chain, String authType, CertificateException cause)
+	private int createDecisionId(MTMDecision d) {
+		int myId;
+		synchronized(openDecisions) {
+			myId = decisionId;
+			openDecisions.put(myId, d);
+			decisionId += 1;
+		}
+		return myId;
+	}
+
+	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
+		Throwable e = cause;
+		Log.d(TAG, "certChainMessage for " + e);
+		while (e.getCause() != null)
+			e = e.getCause();
+		StringBuffer si = new StringBuffer(e.getLocalizedMessage());
+		for (X509Certificate c : chain) {
+			si.append("\n\n");
+			si.append(c.getSubjectDN().toString());
+			si.append(" (");
+			si.append(c.getIssuerDN().toString());
+			si.append(")");
+		}
+		return si.toString();
+	}
+
+	void startActivityNotification(Intent intent) {
+		Notification n = new Notification(android.R.drawable.ic_lock_lock, "SSL Certificate", System.currentTimeMillis());
+		PendingIntent call = PendingIntent.getActivity(master, 0, intent, 0);
+		n.setLatestEventInfo(master.getApplicationContext(), "Title", "Text", call);
+		n.flags |= Notification.FLAG_AUTO_CANCEL;
+
+		notificationManager.notify(NOTIFICATION_ID, n);
+	}
+
+	void interact(final X509Certificate[] chain, String authType, CertificateException cause)
 		throws CertificateException
 	{
-		DialogPoster dp = new DialogPoster(chain, cause);
+		/* prepare the MTMDecision blocker object */
+		MTMDecision choice = new MTMDecision();
+		final int myId = createDecisionId(choice);
+		final String certMessage = certChainMessage(chain, cause);
 
-		// wait for the result
-		synchronized(dp) {
-			try {
-				dp.wait();
-				switch (dp.get()) {
-				case DialogPoster.ASK_ALWAYS:
-					storeCert(chain);
-				case DialogPoster.ASK_ONCE:
-					break;
-				default:
-					throw (cause);
+		masterHandler.post(new Runnable() {
+			public void run() {
+				Intent ni = new Intent(master, MemorizingActivity.class);
+				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
+				ni.putExtra(DECISION_INTENT_ID, myId);
+				ni.putExtra(DECISION_INTENT_CERT, certMessage);
+
+				try {
+					master.startActivity(ni);
+				} catch (Exception e) {
+					Log.e(TAG, "startActivity: " + e);
+					startActivityNotification(ni);
 				}
-			} catch (InterruptedException ie) {
-				Log.d(TAG, "interact() interrupted.");
-				throw (cause);
 			}
+		});
+
+		Log.d(TAG, "openDecisions: " + openDecisions);
+		Log.d(TAG, "waiting on " + myId);
+		try {
+			synchronized(choice) { choice.wait(); }
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Log.d(TAG, "finished wait on " + myId + ": " + choice.state);
+		switch (choice.state) {
+		case MTMDecision.DECISION_ALWAYS:
+			storeCert(chain);
+		case MTMDecision.DECISION_ONCE:
+			break;
+		default:
+			throw (cause);
 		}
 	}
 
-	private class DialogPoster implements OnClickListener {
+	public static void interactResult(Intent i) {
+		int decisionId = i.getIntExtra(DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
+		int choice = i.getIntExtra(DECISION_INTENT_CHOICE, MTMDecision.DECISION_INVALID);
+		Log.d(TAG, "interactResult: " + decisionId + " chose " + choice);
+		Log.d(TAG, "openDecisions: " + openDecisions);
 
-		private final static int ASK_ABORT	= 0;
-		private final static int ASK_ONCE	= 1;
-		private final static int ASK_ALWAYS	= 2;
-		AtomicInteger askResult = new AtomicInteger(ASK_ABORT);
-
-		private DialogPoster(X509Certificate[] chain, CertificateException cause) {
-			Throwable e = cause;
-			while (e.getCause() != null)
-				e = e.getCause();
-			StringBuffer si = new StringBuffer(e.toString());
-			for (X509Certificate c : chain) {
-				si.append("\n\n");
-				si.append(c.getSubjectDN().toString());
-				si.append(" (");
-				si.append(c.getIssuerDN().toString());
-				si.append(")");
-			}
-			final String msg = si.toString();
-
-			// send a query dialog to the activity
-			masterHandler.post(new Runnable() {
-				public void run() {
-					new AlertDialog.Builder(master).setTitle("Accept Invalid Certificate?")
-						.setMessage(msg)
-						.setPositiveButton("Always", DialogPoster.this)
-						.setNeutralButton("Once", DialogPoster.this)
-						.setNegativeButton("Abort", DialogPoster.this)
-						.create().show();
-				}
-			});
+		MTMDecision d;
+		synchronized(openDecisions) {
+			 d = openDecisions.get(decisionId);
+			 openDecisions.remove(decisionId);
 		}
-
-		// react on button press
-		public void onClick(DialogInterface dialog, int btnId) {
-			boolean allowConnect = false;
-			dialog.dismiss();
-			switch (btnId) {
-			case DialogInterface.BUTTON_POSITIVE:
-				Log.d(TAG, "Storing certificate forever...");
-				askResult.set(ASK_ALWAYS);
-				break;
-			case DialogInterface.BUTTON_NEUTRAL:
-				Log.d(TAG, "Allowing connection...");
-				askResult.set(ASK_ONCE);
-				break;
-			default:
-				Log.d(TAG, "Aborting connection!");
-				askResult.set(ASK_ABORT);
-			}
-			synchronized(this) {
-				this.notify();
-			}
-		}
-
-		public int get() {
-			return askResult.get();
+		synchronized(d) {
+			d.state = choice;
+			d.notify();
 		}
 	}
 
