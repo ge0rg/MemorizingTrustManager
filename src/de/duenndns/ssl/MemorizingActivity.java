@@ -52,11 +52,11 @@ public class MemorizingActivity extends Activity
 		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
 		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
 		Log.d(TAG, "data: " + i.getData());
-		new AlertDialog.Builder(this).setTitle("Accept Invalid Certificate?")
+		new AlertDialog.Builder(this).setTitle(R.string.mtm_accept_cert)
 			.setMessage(cert)
-			.setPositiveButton("Always", this)
-			.setNeutralButton("Once", this)
-			.setNegativeButton("Abort", this)
+			.setPositiveButton(R.string.mtm_decision_always, this)
+			.setNeutralButton(R.string.mtm_decision_once, this)
+			.setNegativeButton(R.string.mtm_decision_abort, this)
 			.setOnCancelListener(this)
 			.create().show();
 	}
