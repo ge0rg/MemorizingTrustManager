@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -31,7 +32,9 @@ public class MTMExample extends Activity implements OnClickListener
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.mtmexample);
+
 
 		// set up gui elements
 		findViewById(R.id.connect).setOnClickListener(this);
@@ -60,11 +63,12 @@ public class MTMExample extends Activity implements OnClickListener
 	}
 
 	/** Updates the screen content from a background thread. */
-	void setText(final String s) {
+	void setText(final String s, final boolean progress) {
 		text = s;
 		hdlr.post(new Runnable() {
 			public void run() {
 				content.setText(s);
+				setProgressBarIndeterminateVisibility(progress);
 			}
 		});
 	}
@@ -81,10 +85,10 @@ public class MTMExample extends Activity implements OnClickListener
 					HttpsURLConnection c = (HttpsURLConnection)u.openConnection();
 					c.connect();
 					setText("" + c.getResponseCode() + " "
-							+ c.getResponseMessage());
+							+ c.getResponseMessage(), false);
 					c.disconnect();
 				} catch (Exception e) {
-					setText(e.toString());
+					setText(e.toString(), false);
 					e.printStackTrace();
 				}
 			}
@@ -95,7 +99,8 @@ public class MTMExample extends Activity implements OnClickListener
 	@Override
 	public void onClick(View view) {
 		String url = urlinput.getText().toString();
-		setText("Loading " + url);
+		setText("Loading " + url, true);
+		setProgressBarIndeterminateVisibility(true);
 		connect(url);
 	}
 }
