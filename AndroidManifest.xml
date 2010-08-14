@@ -1,21 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="de.duenndns.mtmexample"
+	package="de.duenndns.ssl"
 	android:versionCode="1"
 	android:versionName="1.0">
 
-	<uses-permission android:name="android.permission.INTERNET" />
-
-	<application android:label="MTM Example" android:icon="@android:drawable/ic_lock_lock">
-		<activity android:name="de.duenndns.ssl.MemorizingActivity"
-			android:label=""
-			android:theme="@android:style/Theme.Dialog" />
-		<activity android:name="MTMExample"
-			android:label="MTM Example">
-			<intent-filter>
-				<action android:name="android.intent.action.MAIN" />
-				<category android:name="android.intent.category.LAUNCHER" />
-			</intent-filter>
-		</activity>
+	<application android:label="MemorizingTrustManager">
+		<activity android:name="de.duenndns.ssl.MemorizingActivity" />
 	</application>
 </manifest>
