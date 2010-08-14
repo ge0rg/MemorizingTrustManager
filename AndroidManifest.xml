@@ -7,6 +7,9 @@
 	<uses-permission android:name="android.permission.INTERNET" />
 
 	<application android:label="MTM Example" android:icon="@android:drawable/ic_lock_lock">
+		<activity android:name="de.duenndns.ssl.MemorizingActivity"
+			android:label=""
+			android:theme="@android:style/Theme.Dialog" />
 		<activity android:name="MTMExample"
 			android:label="MTM Example">
 			<intent-filter>
