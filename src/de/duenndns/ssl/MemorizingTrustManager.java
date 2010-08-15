@@ -66,6 +66,7 @@ import javax.net.ssl.X509TrustManager;
 public class MemorizingTrustManager implements X509TrustManager {
 	final static String TAG = "MemorizingTrustManager";
 	final static String DECISION_INTENT = "de.duenndns.ssl.DECISION";
+	final static String DECISION_INTENT_APP    = DECISION_INTENT + ".app";
 	final static String DECISION_INTENT_ID     = DECISION_INTENT + ".decisionId";
 	final static String DECISION_INTENT_CERT   = DECISION_INTENT + ".cert";
 	final static String DECISION_INTENT_CHOICE = DECISION_INTENT + ".decisionChoice";
@@ -106,7 +107,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			decisionReceiver = new BroadcastReceiver() {
 				public void onReceive(Context ctx, Intent i) { interactResult(i); }
 			};
-			master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT));
+			master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + master.getPackageName()));
 		}
 	}
 
@@ -318,6 +319,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			public void run() {
 				Intent ni = new Intent(master, MemorizingActivity.class);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
+				ni.putExtra(DECISION_INTENT_APP, master.getPackageName());
 				ni.putExtra(DECISION_INTENT_ID, myId);
 				ni.putExtra(DECISION_INTENT_CERT, certMessage);
 
