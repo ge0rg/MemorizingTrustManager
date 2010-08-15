@@ -292,10 +292,14 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
-	void startActivityNotification(Intent intent) {
-		Notification n = new Notification(android.R.drawable.ic_lock_lock, "SSL Certificate", System.currentTimeMillis());
+	void startActivityNotification(Intent intent, String certName) {
+		Notification n = new Notification(android.R.drawable.ic_lock_lock,
+				master.getString(R.string.mtm_notification),
+				System.currentTimeMillis());
 		PendingIntent call = PendingIntent.getActivity(master, 0, intent, 0);
-		n.setLatestEventInfo(master.getApplicationContext(), "Title", "Text", call);
+		n.setLatestEventInfo(master.getApplicationContext(),
+				master.getString(R.string.mtm_notification),
+				certName, call);
 		n.flags |= Notification.FLAG_AUTO_CANCEL;
 
 		notificationManager.notify(NOTIFICATION_ID, n);
@@ -307,6 +311,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		/* prepare the MTMDecision blocker object */
 		MTMDecision choice = new MTMDecision();
 		final int myId = createDecisionId(choice);
+		final String certTitle = chain[0].getSubjectDN().toString();
 		final String certMessage = certChainMessage(chain, cause);
 
 		masterHandler.post(new Runnable() {
@@ -320,7 +325,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 					master.startActivity(ni);
 				} catch (Exception e) {
 					Log.e(TAG, "startActivity: " + e);
-					startActivityNotification(ni);
+					startActivityNotification(ni, certMessage);
 				}
 			}
 		});
