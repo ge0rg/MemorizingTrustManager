@@ -89,12 +89,19 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 	/** Creates an instance of the MemorizingTrustManager class.
 	 *
-	 * @param m the Activity to be used for displaying Dialogs.
+	 * @param m Activity or Service to show the Dialog / Notification
 	 */
-	private MemorizingTrustManager(Application app, Context m) {
+	private MemorizingTrustManager(Context m) {
 		master = m;
 		masterHandler = new Handler();
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
+
+		Application app;
+		if (m instanceof Service) {
+			app = ((Service)m).getApplication();
+		} else if (m instanceof Activity) {
+			app = ((Activity)m).getApplication();
+		} else throw new ClassCastException("MemorizingTrustManager context must be either Activity or Service!");
 
 		File dir = app.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
@@ -111,23 +118,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	/** Creates an instance of the MemorizingTrustManager class.
-	 *
-	 * @param m the Activity to be used for displaying Dialogs.
-	 */
-	private MemorizingTrustManager(Activity m) {
-		this(m.getApplication(), m);
-	}
-
-
-	/** Creates an instance of the MemorizingTrustManager class.
-	 *
-	 * @param m the Service to be used for displaying Dialogs.
-	 */
-	private MemorizingTrustManager(Service m) {
-		this(m.getApplication(), m);
-	}
-
 	/**
 	 * Returns a X509TrustManager list containing a new instance of
 	 * TrustManagerFactory.
@@ -141,20 +131,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 *         new java.security.SecureRandom());
 	 *     HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 	 * </pre>
-	 * @param c the Activity to be used for displaying Dialogs.
+	 * @param c Activity or Service to show the Dialog / Notification
 	 */
-	public static X509TrustManager[] getInstanceList(Activity c) {
+	public static X509TrustManager[] getInstanceList(Context c) {
 		return new X509TrustManager[] { new MemorizingTrustManager(c) };
-	}
-
-	/**
-	 * Returns a X509TrustManager list containing a new instance of
-	 * TrustManagerFactory.
-	 *
-	 * This is equivalent to getInstanceList(Activity), but for Services.
-	 */
-	public static X509TrustManager[] getInstanceList(Service s) {
-		return new X509TrustManager[] { new MemorizingTrustManager(s) };
 	}
 
 	/**
