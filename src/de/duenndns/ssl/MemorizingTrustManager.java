@@ -79,7 +79,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
 	private static HashMap<Integer,MTMDecision> openDecisions = new HashMap();
-	private static BroadcastReceiver decisionReceiver;
 
 	Handler masterHandler;
 	private File keyStoreFile;
@@ -109,13 +108,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 		appKeyStore = loadAppKeyStore();
 		defaultTrustManager = getTrustManager(null);
 		appTrustManager = getTrustManager(appKeyStore);
-
-		if (decisionReceiver == null) {
-			decisionReceiver = new BroadcastReceiver() {
-				public void onReceive(Context ctx, Intent i) { interactResult(i); }
-			};
-			master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + master.getPackageName()));
-		}
 	}
 
 	/**
@@ -295,6 +287,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 		final String certTitle = chain[0].getSubjectDN().toString();
 		final String certMessage = certChainMessage(chain, cause);
 
+		BroadcastReceiver decisionReceiver = new BroadcastReceiver() {
+			public void onReceive(Context ctx, Intent i) { interactResult(i); }
+		};
+		master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + master.getPackageName()));
 		masterHandler.post(new Runnable() {
 			public void run() {
 				Intent ni = new Intent(master, MemorizingActivity.class);
@@ -319,6 +315,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		master.unregisterReceiver(decisionReceiver);
 		Log.d(TAG, "finished wait on " + myId + ": " + choice.state);
 		switch (choice.state) {
 		case MTMDecision.DECISION_ALWAYS:
