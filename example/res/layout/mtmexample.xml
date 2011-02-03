@@ -11,6 +11,13 @@
 		android:text="https://op-co.de/mtm/"
 		android:singleLine="true"
 		/>
+	<CheckBox
+		android:id="@+id/verifyhost"
+		android:text="Verify hostname"
+		android:checked="true"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		/>
 	<Button
 		android:id="@+id/connect" 
 		android:layout_width="fill_parent" 

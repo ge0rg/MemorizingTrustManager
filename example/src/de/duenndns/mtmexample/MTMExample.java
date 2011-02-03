@@ -7,10 +7,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import java.net.URL;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.HttpsURLConnection;
 
@@ -23,6 +25,8 @@ import de.duenndns.ssl.MemorizingTrustManager;
 public class MTMExample extends Activity implements OnClickListener
 {
 	TextView content;
+	CheckBox verifyhost;
+	HostnameVerifier defaultverifier;
 	EditText urlinput;
 	String text;
 	Handler hdlr;
@@ -40,6 +44,7 @@ public class MTMExample extends Activity implements OnClickListener
 		findViewById(R.id.connect).setOnClickListener(this);
 		content = (TextView)findViewById(R.id.content);
 		urlinput = (EditText)findViewById(R.id.url);
+		verifyhost = (CheckBox)findViewById(R.id.verifyhost);
 
 		// register handler for background thread
 		hdlr = new Handler();
@@ -54,6 +59,7 @@ public class MTMExample extends Activity implements OnClickListener
 			sc.init(null, MemorizingTrustManager.getInstanceList(this),
 					new java.security.SecureRandom());
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+			defaultverifier = HttpsURLConnection.getDefaultHostnameVerifier();
 
 			// disable redirects to reduce possible confusion
 			HttpsURLConnection.setFollowRedirects(false);
@@ -78,6 +84,12 @@ public class MTMExample extends Activity implements OnClickListener
 	 * @param urlString a HTTPS URL to connect to.
 	 */
 	void connect(final String urlString) {
+		// register the right hostname verifier
+		if (verifyhost.isChecked()) {
+			HttpsURLConnection.setDefaultHostnameVerifier(defaultverifier);
+		} else {
+			HttpsURLConnection.setDefaultHostnameVerifier(new org.apache.http.conn.ssl.AllowAllHostnameVerifier());
+		}
 		new Thread() {
 			public void run() {
 				try {
