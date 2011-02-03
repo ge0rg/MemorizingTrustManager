@@ -203,6 +203,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
+	private boolean isExpiredException(Throwable e) {
+		do {
+			if (e instanceof CertificateExpiredException)
+				return true;
+			e = e.getCause();
+		} while (e != null);
+		return false;
+	}
+
 	public void checkClientTrusted(X509Certificate[] chain, String authType)
 		throws CertificateException
 	{
@@ -223,11 +232,20 @@ public class MemorizingTrustManager implements X509TrustManager {
 	{
 		Log.d(TAG, "checkServerTrusted(" + chain + ", " + authType + ")");
 		try {
+			Log.d(TAG, "checkServerTrusted: trying appTrustManager");
 			appTrustManager.checkServerTrusted(chain, authType);
-		} catch (CertificateException _) {
+		} catch (CertificateException ae) {
+			// if the cert is stored in our appTrustManager, we ignore expiredness
+			ae.printStackTrace();
+			if (isExpiredException(ae)) {
+				Log.i(TAG, "checkServerTrusted: accepting expired certificate from keystore");
+				return;
+			}
 			try {
+				Log.d(TAG, "checkServerTrusted: trying defaultTrustManager");
 				defaultTrustManager.checkServerTrusted(chain, authType);
 			} catch (CertificateException e) {
+				e.printStackTrace();
 				interact(chain, authType, e);
 			}
 		}
