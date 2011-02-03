@@ -212,43 +212,46 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return false;
 	}
 
-	public void checkClientTrusted(X509Certificate[] chain, String authType)
+	public void checkCertTrusted(X509Certificate[] chain, String authType, boolean isServer)
 		throws CertificateException
 	{
-		Log.d(TAG, "checkClientTrusted(" + chain + ", " + authType + ")");
+		Log.d(TAG, "checkCertTrusted(" + chain + ", " + authType + ", " + isServer + ")");
 		try {
-			appTrustManager.checkClientTrusted(chain, authType);
-		} catch (CertificateException _) {
-			try {
-				defaultTrustManager.checkClientTrusted(chain, authType);
-			} catch (CertificateException e) {
-				interact(chain, authType, e);
-			}
-		}
-	}
-
-	public void checkServerTrusted(X509Certificate[] chain, String authType)
-		throws CertificateException
-	{
-		Log.d(TAG, "checkServerTrusted(" + chain + ", " + authType + ")");
-		try {
-			Log.d(TAG, "checkServerTrusted: trying appTrustManager");
-			appTrustManager.checkServerTrusted(chain, authType);
+			Log.d(TAG, "checkCertTrusted: trying appTrustManager");
+			if (isServer)
+				appTrustManager.checkServerTrusted(chain, authType);
+			else
+				appTrustManager.checkClientTrusted(chain, authType);
 		} catch (CertificateException ae) {
 			// if the cert is stored in our appTrustManager, we ignore expiredness
 			ae.printStackTrace();
 			if (isExpiredException(ae)) {
-				Log.i(TAG, "checkServerTrusted: accepting expired certificate from keystore");
+				Log.i(TAG, "checkCertTrusted: accepting expired certificate from keystore");
 				return;
 			}
 			try {
-				Log.d(TAG, "checkServerTrusted: trying defaultTrustManager");
-				defaultTrustManager.checkServerTrusted(chain, authType);
+				Log.d(TAG, "checkCertTrusted: trying defaultTrustManager");
+				if (isServer)
+					defaultTrustManager.checkServerTrusted(chain, authType);
+				else
+					defaultTrustManager.checkClientTrusted(chain, authType);
 			} catch (CertificateException e) {
 				e.printStackTrace();
 				interact(chain, authType, e);
 			}
 		}
+	}
+
+	public void checkClientTrusted(X509Certificate[] chain, String authType)
+		throws CertificateException
+	{
+		checkCertTrusted(chain, authType, false);
+	}
+
+	public void checkServerTrusted(X509Certificate[] chain, String authType)
+		throws CertificateException
+	{
+		checkCertTrusted(chain, authType, true);
 	}
 
 	public X509Certificate[] getAcceptedIssuers()
