@@ -270,11 +270,14 @@ public class MemorizingTrustManager implements X509TrustManager {
 	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
 		Throwable e = cause;
 		Log.d(TAG, "certChainMessage for " + e);
-		while (e.getCause() != null)
+		StringBuffer si = new StringBuffer();
+		if (e.getCause() != null) {
 			e = e.getCause();
-		StringBuffer si = new StringBuffer(e.getLocalizedMessage());
+			si.append(e.getLocalizedMessage());
+			si.append("\n");
+		}
 		for (X509Certificate c : chain) {
-			si.append("\n\n");
+			si.append("\n");
 			si.append(c.getSubjectDN().toString());
 			si.append(" (");
 			si.append(c.getIssuerDN().toString());
