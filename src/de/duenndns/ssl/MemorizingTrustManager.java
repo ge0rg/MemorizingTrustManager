@@ -204,6 +204,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
+	// if the certificate is stored in the app key store, it is considered "known"
+	private boolean isCertKnown(X509Certificate cert) {
+		try {
+			return appKeyStore.getCertificateAlias(cert) != null;
+		} catch (KeyStoreException e) {
+			return false;
+		}
+	}
+
 	private boolean isExpiredException(Throwable e) {
 		do {
 			if (e instanceof CertificateExpiredException)
@@ -228,6 +237,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 			ae.printStackTrace();
 			if (isExpiredException(ae)) {
 				Log.i(TAG, "checkCertTrusted: accepting expired certificate from keystore");
+				return;
+			}
+			if (isCertKnown(chain[0])) {
+				Log.i(TAG, "checkCertTrusted: accepting cert already stored in keystore");
 				return;
 			}
 			try {
@@ -349,6 +362,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 				ni.putExtra(DECISION_INTENT_ID, myId);
 				ni.putExtra(DECISION_INTENT_CERT, certMessage);
 
+				// we try to directly start the activity and fall back to
+				// making a notification
 				try {
 					master.startActivity(ni);
 				} catch (Exception e) {
