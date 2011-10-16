@@ -47,6 +47,7 @@ import java.io.File;
 import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 import javax.net.ssl.TrustManager;
@@ -270,6 +271,28 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return myId;
 	}
 
+	private static String hexString(byte[] data) {
+		StringBuffer si = new StringBuffer();
+		for (int i = 0; i < data.length; i++) {
+			si.append(String.format("%02x", data[i]));
+			if (i < data.length - 1)
+				si.append(":");
+		}
+		return si.toString();
+	}
+
+	private static String certHash(final X509Certificate cert, String digest) {
+		try {
+			MessageDigest md = MessageDigest.getInstance(digest);
+			md.update(cert.getEncoded());
+			return hexString(md.digest());
+		} catch (java.security.cert.CertificateEncodingException e) {
+			return e.getMessage();
+		} catch (java.security.NoSuchAlgorithmException e) {
+			return e.getMessage();
+		}
+	}
+
 	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
 		Throwable e = cause;
 		Log.d(TAG, "certChainMessage for " + e);
@@ -277,14 +300,17 @@ public class MemorizingTrustManager implements X509TrustManager {
 		if (e.getCause() != null) {
 			e = e.getCause();
 			si.append(e.getLocalizedMessage());
-			si.append("\n");
+			//si.append("\n");
 		}
 		for (X509Certificate c : chain) {
-			si.append("\n");
+			si.append("\n\n");
 			si.append(c.getSubjectDN().toString());
-			si.append(" (");
+			si.append("\nMD5: ");
+			si.append(certHash(c, "MD5"));
+			si.append("\nSHA1: ");
+			si.append(certHash(c, "SHA-1"));
+			si.append("\nSigned by: ");
 			si.append(c.getIssuerDN().toString());
-			si.append(")");
 		}
 		return si.toString();
 	}
