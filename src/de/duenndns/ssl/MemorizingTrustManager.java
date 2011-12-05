@@ -403,6 +403,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 			 d = openDecisions.get(decisionId);
 			 openDecisions.remove(decisionId);
 		}
+		if (d == null) {
+			Log.e(TAG, "interactResult: aborting due to stale decision reference!");
+			return;
+		}
 		synchronized(d) {
 			d.state = choice;
 			d.notify();
