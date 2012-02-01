@@ -87,7 +87,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 	/** Creates an instance of the MemorizingTrustManager class.
 	 *
-	 * @param m Activity or Service to show the Dialog / Notification
+	 * You need to supply the application context. This has to be one of:
+	 *    - Application
+	 *    - Activity
+	 *    - Service
+	 *
+	 * The context is used for file management, to display the dialog /
+	 * notification and for obtaining translated strings.
+	 *
+	 * @param m Context for the application.
 	 */
 	public MemorizingTrustManager(Context m) {
 		master = m;
@@ -95,7 +103,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		Application app;
-		if (m instanceof Service) {
+		if (m instanceof Application) {
+			app = (Application)m;
+		} else if (m instanceof Service) {
 			app = ((Service)m).getApplication();
 		} else if (m instanceof Activity) {
 			app = ((Activity)m).getApplication();
