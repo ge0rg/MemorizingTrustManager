@@ -74,6 +74,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	static String KEYSTORE_FILE = "KeyStore.bks";
 
 	Context master;
+	Activity foregroundAct;
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
 	private static HashMap<Integer,MTMDecision> openDecisions = new HashMap();
@@ -88,7 +89,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 *
 	 * @param m Activity or Service to show the Dialog / Notification
 	 */
-	private MemorizingTrustManager(Context m) {
+	public MemorizingTrustManager(Context m) {
 		master = m;
 		masterHandler = new Handler();
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -125,6 +126,36 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 */
 	public static X509TrustManager[] getInstanceList(Context c) {
 		return new X509TrustManager[] { new MemorizingTrustManager(c) };
+	}
+
+	/**
+	 * Binds an Activity to the MTM for displaying the query dialog.
+	 *
+	 * This is useful if your connection is run from a service that is
+	 * triggered by user interaction -- in such cases the activity is
+	 * visible and the user tends to ignore the service notification.
+	 *
+	 * You should never have a hidden activity bound to MTM! Use this
+	 * function in onResume() and @see unbindDisplayActivity in onPause().
+	 *
+	 * @param act Activity to be bound
+	 */
+	public void bindDisplayActivity(Activity act) {
+		foregroundAct = act;
+	}
+
+	/**
+	 * Removes an Activity from the MTM display stack.
+	 *
+	 * Always call this function when the Activity added with
+	 * @see bindDisplayActivity is hidden.
+	 *
+	 * @param act Activity to be unbound
+	 */
+	public void unbindDisplayActivity(Activity act) {
+		// do not remove if it was overridden by a different activity
+		if (foregroundAct == act)
+			foregroundAct = null;
 	}
 
 	/**
@@ -338,6 +369,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 		notificationManager.notify(NOTIFICATION_ID, n);
 	}
 
+	/**
+	 * Returns the top-most entry of the activity stack.
+	 *
+	 * @return the Context of the currently bound UI or the master context if none is bound
+	 */
+	Context getUI() {
+		return (foregroundAct != null) ? foregroundAct : master;
+	}
+
 	void interact(final X509Certificate[] chain, String authType, CertificateException cause)
 		throws CertificateException
 	{
@@ -362,7 +402,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				// we try to directly start the activity and fall back to
 				// making a notification
 				try {
-					master.startActivity(ni);
+					getUI().startActivity(ni);
 				} catch (Exception e) {
 					Log.e(TAG, "startActivity: " + e);
 					startActivityNotification(ni, certMessage);
