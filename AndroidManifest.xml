@@ -5,6 +5,7 @@
 	android:versionName="1.0">
 
 	<application android:label="MemorizingTrustManager">
-		<activity android:name="de.duenndns.ssl.MemorizingActivity" />
+		<activity android:name="de.duenndns.ssl.MemorizingActivity"
+			android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 	</application>
 </manifest>
