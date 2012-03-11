@@ -45,7 +45,6 @@ import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -77,7 +76,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	Activity foregroundAct;
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
-	private static HashMap<Integer,MTMDecision> openDecisions = new HashMap();
+	private static HashMap<Integer, MTMDecision> openDecisions = new HashMap<Integer, MTMDecision>();
 
 	Handler masterHandler;
 	private File keyStoreFile;
@@ -394,7 +393,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 		/* prepare the MTMDecision blocker object */
 		MTMDecision choice = new MTMDecision();
 		final int myId = createDecisionId(choice);
-		final String certTitle = chain[0].getSubjectDN().toString();
 		final String certMessage = certChainMessage(chain, cause);
 
 		BroadcastReceiver decisionReceiver = new BroadcastReceiver() {
