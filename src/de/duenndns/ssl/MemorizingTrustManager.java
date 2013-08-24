@@ -98,7 +98,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 */
 	public MemorizingTrustManager(Context m) {
 		master = m;
-		masterHandler = new Handler();
+		masterHandler = new Handler(m.getMainLooper());
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		Application app;
