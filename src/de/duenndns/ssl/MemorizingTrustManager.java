@@ -95,10 +95,36 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * notification and for obtaining translated strings.
 	 *
 	 * @param m Context for the application.
+	 * @param appTrustManager Delegate trust management to this TM first.
+	 * @param defaultTrustManager Delegate trust management to this TM second, if non-null.
+	 */
+	public MemorizingTrustManager(Context m, X509TrustManager appTrustManager, X509TrustManager defaultTrustManager) {
+		init(m);
+		this.appTrustManager = appTrustManager;
+		this.defaultTrustManager = defaultTrustManager;
+	}
+
+	/** Creates an instance of the MemorizingTrustManager class.
+	 *
+	 * You need to supply the application context. This has to be one of:
+	 *    - Application
+	 *    - Activity
+	 *    - Service
+	 *
+	 * The context is used for file management, to display the dialog /
+	 * notification and for obtaining translated strings.
+	 *
+	 * @param m Context for the application.
 	 */
 	public MemorizingTrustManager(Context m) {
+		init(m);
+		this.appTrustManager = getTrustManager(appKeyStore);
+		this.defaultTrustManager = getTrustManager(null);
+	}
+
+	void init(Context m) {
 		master = m;
-		masterHandler = new Handler();
+		masterHandler = new Handler(m.getMainLooper());
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		Application app;
@@ -114,10 +140,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
 
 		appKeyStore = loadAppKeyStore();
-		defaultTrustManager = getTrustManager(null);
-		appTrustManager = getTrustManager(appKeyStore);
 	}
 
+	
 	/**
 	 * Returns a X509TrustManager list containing a new instance of
 	 * TrustManagerFactory.
@@ -281,6 +306,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 				return;
 			}
 			try {
+				if (defaultTrustManager == null)
+					throw new CertificateException();
 				Log.d(TAG, "checkCertTrusted: trying defaultTrustManager");
 				if (isServer)
 					defaultTrustManager.checkServerTrusted(chain, authType);
@@ -402,6 +429,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		masterHandler.post(new Runnable() {
 			public void run() {
 				Intent ni = new Intent(master, MemorizingActivity.class);
+				ni.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
 				ni.putExtra(DECISION_INTENT_APP, master.getPackageName());
 				ni.putExtra(DECISION_INTENT_ID, myId);
