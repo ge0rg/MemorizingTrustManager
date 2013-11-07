@@ -26,6 +26,7 @@ package de.duenndns.ssl;
 
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
@@ -45,39 +46,36 @@ public class MemorizingDialogFragment extends DialogFragment
 	String app;
 	String cert;
 
-	public MemorizingDialogFragment() {
-		
-	}
-	
-	public MemorizingDialogFragment(Intent i) {
-		//Intent i = getActivity().getIntent();
-		app = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_APP);
-		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
-		cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
-		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
-		Log.d(TAG, "data: " + i.getData());
-	}
-	
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		Log.d(TAG, "onCreate");
-		super.onCreate(savedInstanceState);
+	public static MemorizingDialogFragment getInstance(Intent i) {
+		MemorizingDialogFragment f = new MemorizingDialogFragment();
+
+		Bundle args = new Bundle();
+		args.putString(MemorizingTrustManager.DECISION_INTENT_APP, i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_APP));
+		args.putInt(MemorizingTrustManager.DECISION_INTENT_ID, i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID));
+		args.putString(MemorizingTrustManager.DECISION_INTENT_CERT, i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT));
+		f.setArguments(args);
+		return f;
 	}
 
 	@Override
-	public void onResume() {
-		super.onResume();
-		
-		new AlertDialog.Builder(getActivity()).setTitle(R.string.mtm_accept_cert)
-			.setMessage(cert)
-			.setPositiveButton(R.string.mtm_decision_always, this)
-			//.setNeutralButton(R.string.mtm_decision_once, this)
-			.setNegativeButton(R.string.mtm_decision_abort, this)
-			.setOnCancelListener(this)
-			.create().show();
+	public Dialog onCreateDialog(Bundle savedInstanceState){
+		Bundle args = getArguments();
+		app = args.getString(MemorizingTrustManager.DECISION_INTENT_APP);
+		decisionId = args.getInt(MemorizingTrustManager.DECISION_INTENT_ID);
+		cert = args.getString(MemorizingTrustManager.DECISION_INTENT_CERT);
+
+		return new AlertDialog.Builder(getActivity()).setTitle(R.string.mtm_accept_cert)
+				.setMessage(cert)
+				.setPositiveButton(R.string.mtm_decision_always, this)
+				//.setNeutralButton(R.string.mtm_decision_once, this)
+				.setNegativeButton(R.string.mtm_decision_abort, this)
+				.setOnCancelListener(this)
+				.create();
 	}
 
 	void sendDecision(int decision) {
+		if(getActivity() == null)
+			return;
 		Log.d(TAG, "Sending decision to " + app + ": " + decision);
 		Intent i = new Intent(MemorizingTrustManager.DECISION_INTENT + "/" + app);
 		i.putExtra(MemorizingTrustManager.DECISION_INTENT_ID, decisionId);
