@@ -25,30 +25,39 @@
  * THE SOFTWARE.
  */
 package de.duenndns.ssl;
+import java.io.File;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.MessageDigest;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
+
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.Service;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.util.Log;
 import android.os.Handler;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+import android.util.SparseArray;
 
-import java.io.File;
-import java.security.cert.*;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.MessageDigest;
-import java.util.HashMap;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
+import de.duenndns.ssl.R;
 
 /**
  * A X509 trust manager implementation which asks the user about invalid
@@ -71,39 +80,19 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 	static String KEYSTORE_DIR = "KeyStore";
 	static String KEYSTORE_FILE = "KeyStore.bks";
-
-	Context master;
+	
 	Activity foregroundAct;
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
-	private static HashMap<Integer, MTMDecision> openDecisions = new HashMap<Integer, MTMDecision>();
+	private static SparseArray<MTMDecision> openDecisions = new SparseArray<MTMDecision>();
 
 	Handler masterHandler;
 	private File keyStoreFile;
 	private KeyStore appKeyStore;
 	private X509TrustManager defaultTrustManager;
 	private X509TrustManager appTrustManager;
-
-	/** Creates an instance of the MemorizingTrustManager class.
-	 *
-	 * You need to supply the application context. This has to be one of:
-	 *    - Application
-	 *    - Activity
-	 *    - Service
-	 *
-	 * The context is used for file management, to display the dialog /
-	 * notification and for obtaining translated strings.
-	 *
-	 * @param m Context for the application.
-	 * @param appTrustManager Delegate trust management to this TM first.
-	 * @param defaultTrustManager Delegate trust management to this TM second, if non-null.
-	 */
-	public MemorizingTrustManager(Context m, X509TrustManager appTrustManager, X509TrustManager defaultTrustManager) {
-		init(m);
-		this.appTrustManager = appTrustManager;
-		this.defaultTrustManager = defaultTrustManager;
-	}
-
+	private Context master;
+	
 	/** Creates an instance of the MemorizingTrustManager class.
 	 *
 	 * You need to supply the application context. This has to be one of:
@@ -117,14 +106,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * @param m Context for the application.
 	 */
 	public MemorizingTrustManager(Context m) {
-		init(m);
-		this.appTrustManager = getTrustManager(appKeyStore);
-		this.defaultTrustManager = getTrustManager(null);
-	}
-
-	void init(Context m) {
 		master = m;
-		masterHandler = new Handler(m.getMainLooper());
+		masterHandler = new Handler(master.getMainLooper());
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		Application app;
@@ -140,9 +123,11 @@ public class MemorizingTrustManager implements X509TrustManager {
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
 
 		appKeyStore = loadAppKeyStore();
+
+		defaultTrustManager = getTrustManager(null);
+		appTrustManager = getTrustManager(appKeyStore);
 	}
 
-	
 	/**
 	 * Returns a X509TrustManager list containing a new instance of
 	 * TrustManagerFactory.
@@ -182,7 +167,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * Removes an Activity from the MTM display stack.
 	 *
 	 * Always call this function when the Activity added with
-	 * @see bindDisplayActivity is hidden.
+	 * bindDisplayActivity is hidden.
 	 *
 	 * @param act Activity to be unbound
 	 */
@@ -252,7 +237,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			Log.e(TAG, "storeCert(" + chain + ")", e);
 			return;
 		}
-		
+
 		// reload appTrustManager
 		appTrustManager = getTrustManager(appKeyStore);
 
@@ -306,8 +291,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 				return;
 			}
 			try {
-				if (defaultTrustManager == null)
-					throw new CertificateException();
 				Log.d(TAG, "checkCertTrusted: trying defaultTrustManager");
 				if (isServer)
 					defaultTrustManager.checkServerTrusted(chain, authType);
@@ -392,10 +375,12 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
+	@SuppressWarnings("deprecation")
 	void startActivityNotification(Intent intent, String certName) {
-		Notification n = new Notification(android.R.drawable.ic_lock_lock,
-				master.getString(R.string.mtm_notification),
-				System.currentTimeMillis());
+		Notification n = new NotificationCompat.Builder(master)
+				.setLargeIcon(BitmapFactory.decodeResource(master.getResources(), android.R.drawable.ic_lock_lock))
+				.setContentText(master.getString(R.string.mtm_notification)).build();
+		
 		PendingIntent call = PendingIntent.getActivity(master, 0, intent, 0);
 		n.setLatestEventInfo(master.getApplicationContext(),
 				master.getString(R.string.mtm_notification),
@@ -428,19 +413,17 @@ public class MemorizingTrustManager implements X509TrustManager {
 		master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + master.getPackageName()));
 		masterHandler.post(new Runnable() {
 			public void run() {
-				Intent ni = new Intent(master, MemorizingActivity.class);
-				ni.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				Intent ni = new Intent(master, MemorizingDialogFragment.class);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
 				ni.putExtra(DECISION_INTENT_APP, master.getPackageName());
 				ni.putExtra(DECISION_INTENT_ID, myId);
 				ni.putExtra(DECISION_INTENT_CERT, certMessage);
-
-				// we try to directly start the activity and fall back to
-				// making a notification
+				
+				DialogFragment dialog = new MemorizingDialogFragment(ni);
 				try {
-					getUI().startActivity(ni);
-				} catch (Exception e) {
-					Log.e(TAG, "startActivity: " + e);
+					dialog.show(((FragmentActivity) getUI()).getSupportFragmentManager(), "NoticeDialogFragment");
+				} catch(Exception ex) {
+					Log.e(TAG, "startActivity: " + ex);
 					startActivityNotification(ni, certMessage);
 				}
 			}
@@ -485,5 +468,17 @@ public class MemorizingTrustManager implements X509TrustManager {
 			d.notify();
 		}
 	}
-
+	public boolean clearKeyStore(){
+		try {
+			Enumeration<String> aliases = appKeyStore.aliases();
+			while(aliases.hasMoreElements()){
+				String alias = aliases.nextElement();
+				appKeyStore.deleteEntry(alias);
+			}
+			return true;
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 }

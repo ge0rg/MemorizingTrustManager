@@ -1,3 +1,5 @@
+package de.duenndns.ssl;
+
 /* MemorizingTrustManager - a TrustManager which asks the user about invalid
  *  certificates and memorizes their decision.
  *
@@ -21,23 +23,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.duenndns.ssl;
 
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.DialogInterface.*;
+import android.content.DialogInterface.OnCancelListener;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 
-public class MemorizingActivity extends Activity
+import de.duenndns.ssl.R;
+
+
+public class MemorizingDialogFragment extends DialogFragment
 		implements OnClickListener,OnCancelListener {
-	final static String TAG = "MemorizingActivity";
+	final static String TAG = "MemorizingDialogFragment";
 
 	int decisionId;
 	String app;
+	String cert;
+
+	public MemorizingDialogFragment() {
+		
+	}
+	
+	public MemorizingDialogFragment(Intent i) {
+		//Intent i = getActivity().getIntent();
+		app = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_APP);
+		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
+		cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
+		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
+		Log.d(TAG, "data: " + i.getData());
+	}
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -48,16 +67,11 @@ public class MemorizingActivity extends Activity
 	@Override
 	public void onResume() {
 		super.onResume();
-		Intent i = getIntent();
-		app = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_APP);
-		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
-		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
-		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
-		Log.d(TAG, "data: " + i.getData());
-		new AlertDialog.Builder(this).setTitle(R.string.mtm_accept_cert)
+		
+		new AlertDialog.Builder(getActivity()).setTitle(R.string.mtm_accept_cert)
 			.setMessage(cert)
 			.setPositiveButton(R.string.mtm_decision_always, this)
-			.setNeutralButton(R.string.mtm_decision_once, this)
+			//.setNeutralButton(R.string.mtm_decision_once, this)
 			.setNegativeButton(R.string.mtm_decision_abort, this)
 			.setOnCancelListener(this)
 			.create().show();
@@ -68,8 +82,8 @@ public class MemorizingActivity extends Activity
 		Intent i = new Intent(MemorizingTrustManager.DECISION_INTENT + "/" + app);
 		i.putExtra(MemorizingTrustManager.DECISION_INTENT_ID, decisionId);
 		i.putExtra(MemorizingTrustManager.DECISION_INTENT_CHOICE, decision);
-		sendBroadcast(i);
-		finish();
+		getActivity().sendBroadcast(i);
+		getDialog().dismiss();
 	}
 
 	// react on AlertDialog button press
