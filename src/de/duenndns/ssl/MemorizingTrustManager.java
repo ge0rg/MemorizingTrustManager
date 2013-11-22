@@ -37,6 +37,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.util.Log;
+import android.util.SparseArray;
 import android.os.Handler;
 
 import java.io.File;
@@ -45,6 +46,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.util.HashMap;
+
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -75,7 +77,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	Activity foregroundAct;
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
-	private static HashMap<Integer, MTMDecision> openDecisions = new HashMap<Integer, MTMDecision>();
+	private static SparseArray<MTMDecision> openDecisions = new SparseArray<MTMDecision>();
 
 	Handler masterHandler;
 	private File keyStoreFile;
