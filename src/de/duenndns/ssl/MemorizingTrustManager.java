@@ -30,7 +30,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.Service;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -72,7 +71,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	static String KEYSTORE_DIR = "KeyStore";
 	static String KEYSTORE_FILE = "KeyStore.bks";
 
-	Context master;
+	Application application;
 	Activity foregroundAct;
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
@@ -98,8 +97,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * @param appTrustManager Delegate trust management to this TM first.
 	 * @param defaultTrustManager Delegate trust management to this TM second, if non-null.
 	 */
-	public MemorizingTrustManager(Context m, X509TrustManager appTrustManager, X509TrustManager defaultTrustManager) {
-		init(m);
+	public MemorizingTrustManager(Application app, X509TrustManager appTrustManager, X509TrustManager defaultTrustManager) {
+		init(app);
 		this.appTrustManager = appTrustManager;
 		this.defaultTrustManager = defaultTrustManager;
 	}
@@ -116,27 +115,18 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 *
 	 * @param m Context for the application.
 	 */
-	public MemorizingTrustManager(Context m) {
-		init(m);
+	public MemorizingTrustManager(Application app) {
+		init(app);
 		this.appTrustManager = getTrustManager(appKeyStore);
 		this.defaultTrustManager = getTrustManager(null);
 	}
 
-	void init(Context m) {
-		master = m;
-		masterHandler = new Handler(m.getMainLooper());
-		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
+	void init(Application app) {
+		application = app;
+		masterHandler = new Handler(app.getMainLooper());
+		notificationManager = (NotificationManager)application.getSystemService(Context.NOTIFICATION_SERVICE);
 
-		Application app;
-		if (m instanceof Application) {
-			app = (Application)m;
-		} else if (m instanceof Service) {
-			app = ((Service)m).getApplication();
-		} else if (m instanceof Activity) {
-			app = ((Activity)m).getApplication();
-		} else throw new ClassCastException("MemorizingTrustManager context must be either Activity or Service!");
-
-		File dir = app.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
+		File dir = application.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
 
 		appKeyStore = loadAppKeyStore();
@@ -158,8 +148,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * </pre>
 	 * @param c Activity or Service to show the Dialog / Notification
 	 */
-	public static X509TrustManager[] getInstanceList(Context c) {
-		return new X509TrustManager[] { new MemorizingTrustManager(c) };
+	public static X509TrustManager[] getInstanceList(Application app) {
+		return new X509TrustManager[] { new MemorizingTrustManager(app) };
 	}
 
 	/**
@@ -394,11 +384,11 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 	void startActivityNotification(Intent intent, String certName) {
 		Notification n = new Notification(android.R.drawable.ic_lock_lock,
-				master.getString(R.string.mtm_notification),
+				application.getString(R.string.mtm_notification),
 				System.currentTimeMillis());
-		PendingIntent call = PendingIntent.getActivity(master, 0, intent, 0);
-		n.setLatestEventInfo(master.getApplicationContext(),
-				master.getString(R.string.mtm_notification),
+		PendingIntent call = PendingIntent.getActivity(application, 0, intent, 0);
+		n.setLatestEventInfo(application.getApplicationContext(),
+				application.getString(R.string.mtm_notification),
 				certName, call);
 		n.flags |= Notification.FLAG_AUTO_CANCEL;
 
@@ -411,7 +401,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * @return the Context of the currently bound UI or the master context if none is bound
 	 */
 	Context getUI() {
-		return (foregroundAct != null) ? foregroundAct : master;
+		return (foregroundAct != null) ? foregroundAct : application;
 	}
 
 	void interact(final X509Certificate[] chain, String authType, CertificateException cause)
@@ -425,13 +415,13 @@ public class MemorizingTrustManager implements X509TrustManager {
 		BroadcastReceiver decisionReceiver = new BroadcastReceiver() {
 			public void onReceive(Context ctx, Intent i) { interactResult(i); }
 		};
-		master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + master.getPackageName()));
+		application.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + application.getPackageName()));
 		masterHandler.post(new Runnable() {
 			public void run() {
-				Intent ni = new Intent(master, MemorizingActivity.class);
+				Intent ni = new Intent(application, MemorizingActivity.class);
 				ni.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
-				ni.putExtra(DECISION_INTENT_APP, master.getPackageName());
+				ni.putExtra(DECISION_INTENT_APP, application.getPackageName());
 				ni.putExtra(DECISION_INTENT_ID, myId);
 				ni.putExtra(DECISION_INTENT_CERT, certMessage);
 
@@ -453,7 +443,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		master.unregisterReceiver(decisionReceiver);
+		application.unregisterReceiver(decisionReceiver);
 		Log.d(TAG, "finished wait on " + myId + ": " + choice.state);
 		switch (choice.state) {
 		case MTMDecision.DECISION_ALWAYS:
