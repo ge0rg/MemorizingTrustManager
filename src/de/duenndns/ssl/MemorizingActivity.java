@@ -37,7 +37,6 @@ public class MemorizingActivity extends Activity
 	final static String TAG = "MemorizingActivity";
 
 	int decisionId;
-	String app;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -49,7 +48,6 @@ public class MemorizingActivity extends Activity
 	public void onResume() {
 		super.onResume();
 		Intent i = getIntent();
-		app = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_APP);
 		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
 		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
 		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
@@ -64,11 +62,8 @@ public class MemorizingActivity extends Activity
 	}
 
 	void sendDecision(int decision) {
-		Log.d(TAG, "Sending decision to " + app + ": " + decision);
-		Intent i = new Intent(MemorizingTrustManager.DECISION_INTENT + "/" + app);
-		i.putExtra(MemorizingTrustManager.DECISION_INTENT_ID, decisionId);
-		i.putExtra(MemorizingTrustManager.DECISION_INTENT_CHOICE, decision);
-		sendBroadcast(i);
+		Log.d(TAG, "Sending decision: " + decision);
+		MemorizingTrustManager.interactResult(decisionId, decision);
 		finish();
 	}
 
