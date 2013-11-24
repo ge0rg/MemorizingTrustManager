@@ -32,12 +32,11 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.Uri;
 import android.util.Log;
+import android.util.SparseArray;
 import android.os.Handler;
 
 import java.io.File;
@@ -45,7 +44,7 @@ import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
-import java.util.HashMap;
+
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -63,7 +62,6 @@ import javax.net.ssl.X509TrustManager;
 public class MemorizingTrustManager implements X509TrustManager {
 	final static String TAG = "MemorizingTrustManager";
 	final static String DECISION_INTENT = "de.duenndns.ssl.DECISION";
-	final static String DECISION_INTENT_APP    = DECISION_INTENT + ".app";
 	final static String DECISION_INTENT_ID     = DECISION_INTENT + ".decisionId";
 	final static String DECISION_INTENT_CERT   = DECISION_INTENT + ".cert";
 	final static String DECISION_INTENT_CHOICE = DECISION_INTENT + ".decisionChoice";
@@ -76,7 +74,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	Activity foregroundAct;
 	NotificationManager notificationManager;
 	private static int decisionId = 0;
-	private static HashMap<Integer, MTMDecision> openDecisions = new HashMap<Integer, MTMDecision>();
+	private static SparseArray<MTMDecision> openDecisions = new SparseArray<MTMDecision>();
 
 	Handler masterHandler;
 	private File keyStoreFile;
@@ -422,16 +420,11 @@ public class MemorizingTrustManager implements X509TrustManager {
 		final int myId = createDecisionId(choice);
 		final String certMessage = certChainMessage(chain, cause);
 
-		BroadcastReceiver decisionReceiver = new BroadcastReceiver() {
-			public void onReceive(Context ctx, Intent i) { interactResult(i); }
-		};
-		master.registerReceiver(decisionReceiver, new IntentFilter(DECISION_INTENT + "/" + master.getPackageName()));
 		masterHandler.post(new Runnable() {
 			public void run() {
 				Intent ni = new Intent(master, MemorizingActivity.class);
 				ni.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
-				ni.putExtra(DECISION_INTENT_APP, master.getPackageName());
 				ni.putExtra(DECISION_INTENT_ID, myId);
 				ni.putExtra(DECISION_INTENT_CERT, certMessage);
 
@@ -453,7 +446,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		master.unregisterReceiver(decisionReceiver);
 		Log.d(TAG, "finished wait on " + myId + ": " + choice.state);
 		switch (choice.state) {
 		case MTMDecision.DECISION_ALWAYS:
@@ -465,12 +457,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	public static void interactResult(Intent i) {
-		int decisionId = i.getIntExtra(DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
-		int choice = i.getIntExtra(DECISION_INTENT_CHOICE, MTMDecision.DECISION_INVALID);
-		Log.d(TAG, "interactResult: " + decisionId + " chose " + choice);
-		Log.d(TAG, "openDecisions: " + openDecisions);
-
+	protected static void interactResult(int decisionId, int choice) {
 		MTMDecision d;
 		synchronized(openDecisions) {
 			 d = openDecisions.get(decisionId);
