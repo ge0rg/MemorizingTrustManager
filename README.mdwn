@@ -93,6 +93,16 @@ MTM's constructor:
 
 ### 4. Profit!
 
+### Logging
+
+MTM uses java.util.logging (JUL) for logging purposes. If you have not
+configured a Handler for JUL, then Android will by default log all
+messages of Level.INFO or higher. In order to get also the debug log
+messages (those with Level.FINE or lower) you need to configure a
+Handler accordingly. The MTM example project contains
+de.duenndns.mtmexample.JULHandler, which allows to enable and disable
+debug logging at runtime.
+
 ## Alternatives
 
 MemorizingTrustManager is not the only one out there.
