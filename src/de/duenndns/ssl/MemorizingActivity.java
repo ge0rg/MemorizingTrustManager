@@ -24,23 +24,26 @@
 package de.duenndns.ssl;
 
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.*;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
 public class MemorizingActivity extends Activity
 		implements OnClickListener,OnCancelListener {
-	final static String TAG = "MemorizingActivity";
+
+	private final static Logger LOGGER = Logger.getLogger(MemorizingActivity.class.getName());
 
 	int decisionId;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.d(TAG, "onCreate");
+		LOGGER.log(Level.FINE, "onCreate");
 		super.onCreate(savedInstanceState);
 	}
 
@@ -50,8 +53,7 @@ public class MemorizingActivity extends Activity
 		Intent i = getIntent();
 		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
 		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
-		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
-		Log.d(TAG, "data: " + i.getData());
+		LOGGER.log(Level.FINE, "onResume with " + i.getExtras() + " decId=" + decisionId + " data: " + i.getData());
 		new AlertDialog.Builder(this).setTitle(R.string.mtm_accept_cert)
 			.setMessage(cert)
 			.setPositiveButton(R.string.mtm_decision_always, this)
@@ -62,7 +64,7 @@ public class MemorizingActivity extends Activity
 	}
 
 	void sendDecision(int decision) {
-		Log.d(TAG, "Sending decision: " + decision);
+		LOGGER.log(Level.FINE, "Sending decision: " + decision);
 		MemorizingTrustManager.interactResult(decisionId, decision);
 		finish();
 	}
