@@ -390,7 +390,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
-	void startActivityNotification(Intent intent, String certName) {
+	void startActivityNotification(Intent intent, int decisionId, String certName) {
 		Notification n = new Notification(android.R.drawable.ic_lock_lock,
 				master.getString(R.string.mtm_notification),
 				System.currentTimeMillis());
@@ -400,7 +400,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				certName, call);
 		n.flags |= Notification.FLAG_AUTO_CANCEL;
 
-		notificationManager.notify(NOTIFICATION_ID, n);
+		notificationManager.notify(NOTIFICATION_ID + decisionId, n);
 	}
 
 	/**
@@ -434,7 +434,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 					getUI().startActivity(ni);
 				} catch (Exception e) {
 					Log.e(TAG, "startActivity: " + e);
-					startActivityNotification(ni, certMessage);
+					startActivityNotification(ni, myId, certMessage);
 				}
 			}
 		});
