@@ -44,6 +44,7 @@ import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
+import java.util.Enumeration;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -202,6 +203,54 @@ public class MemorizingTrustManager implements X509TrustManager {
 	public static void setKeyStoreFile(String dirname, String filename) {
 		KEYSTORE_DIR = dirname;
 		KEYSTORE_FILE = filename;
+	}
+
+	/**
+	 * Get a list of all certificate aliases stored in MTM.
+	 *
+	 * @return an {@link Enumeration} of all certificates
+	 */
+	public Enumeration<String> getCertificates() {
+		try {
+			return appKeyStore.aliases();
+		} catch (KeyStoreException e) {
+			// this should never happen, however...
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Get a certificate for a given alias.
+	 *
+	 * @param alias the certificate's alias as returned by {@link getCertificates}.
+	 *
+	 * @return the certificate associated with the alias or <tt>null</tt> if none found.
+	 */
+	public Certificate getCertificate(String alias) {
+		try {
+			return appKeyStore.getCertificate(alias);
+		} catch (KeyStoreException e) {
+			// this should never happen, however...
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Removes the given certificate from MTMs key store.
+	 *
+	 * <p>
+	 * <b>WARNING</b>: this does not immediately invalidate the certificate. It is
+	 * well possible that (a) data is transmitted over still existing connections or
+	 * (b) new connections are created using TLS renegotiation, without a new cert
+	 * check.
+	 * </p>
+	 * @param alias the certificate's alias as returned by {@link getCertificates}.
+	 *
+	 * @throws KeyStoreException if the certificate could not be deleted.
+	 */
+	public void deleteCertificate(String alias) throws KeyStoreException {
+		appKeyStore.deleteEntry(alias);
+		keyStoreUpdated();
 	}
 
 	X509TrustManager getTrustManager(KeyStore ks) {
