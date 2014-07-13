@@ -380,9 +380,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 		for (X509Certificate c : chain) {
 			si.append("\n\n");
 			si.append(c.getSubjectDN().toString());
-			si.append("\nMD5: ");
-			si.append(certHash(c, "MD5"));
-			si.append("\nSHA1: ");
+			si.append("\nSHA-256: ");
+			si.append(certHash(c, "SHA-256"));
+			si.append("\nSHA-1: ");
 			si.append(certHash(c, "SHA-1"));
 			si.append("\nSigned by: ");
 			si.append(c.getIssuerDN().toString());
