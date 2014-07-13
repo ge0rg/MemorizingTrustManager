@@ -1,20 +1,28 @@
 package de.duenndns.mtmexample;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import java.net.URL;
+import java.security.KeyStoreException;
+import java.util.ArrayList;
+import java.util.Collections;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.X509TrustManager;
 
 import de.duenndns.ssl.MemorizingTrustManager;
 
@@ -24,6 +32,8 @@ import de.duenndns.ssl.MemorizingTrustManager;
  */
 public class MTMExample extends Activity implements OnClickListener
 {
+	MemorizingTrustManager mtm;
+	
 	TextView content;
 	CheckBox verifyhost;
 	HostnameVerifier defaultverifier;
@@ -56,7 +66,8 @@ public class MTMExample extends Activity implements OnClickListener
 
 			// register MemorizingTrustManager for HTTPS
 			SSLContext sc = SSLContext.getInstance("TLS");
-			sc.init(null, MemorizingTrustManager.getInstanceList(this),
+			mtm = new MemorizingTrustManager(this);
+			sc.init(null, new X509TrustManager[] { mtm },
 					new java.security.SecureRandom());
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 			defaultverifier = HttpsURLConnection.getDefaultHostnameVerifier();
@@ -114,5 +125,27 @@ public class MTMExample extends Activity implements OnClickListener
 		setText("Loading " + url, true);
 		setProgressBarIndeterminateVisibility(true);
 		connect(url);
+	}
+	
+	/** React on the "Manage Certificates" button press. */
+	public void onManage(View view) {
+		final ArrayList<String> aliases = Collections.list(mtm.getCertificates());
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.select_dialog_item, aliases);
+		new AlertDialog.Builder(this).setTitle("Tap Certificate to Delete")
+				.setNegativeButton(android.R.string.cancel, null)
+				.setAdapter(adapter, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							try {
+								String alias = aliases.get(which);
+								mtm.deleteCertificate(alias);
+								setText("Deleted " + alias, false);
+							} catch (KeyStoreException e) {
+								e.printStackTrace();
+								setText("Error: " + e.getLocalizedMessage(), false);
+							}
+						}
+					})
+				.create().show();
 	}
 }
