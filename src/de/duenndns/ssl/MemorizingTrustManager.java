@@ -251,6 +251,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 			return;
 		}
 		
+		keyStoreUpdated();
+	}
+
+	void keyStoreUpdated() {
 		// reload appTrustManager
 		appTrustManager = getTrustManager(appKeyStore);
 
