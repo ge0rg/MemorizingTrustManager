@@ -45,6 +45,7 @@ import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Enumeration;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -206,6 +207,54 @@ public class MemorizingTrustManager implements X509TrustManager {
 		KEYSTORE_FILE = filename;
 	}
 
+	/**
+	 * Get a list of all certificate aliases stored in MTM.
+	 *
+	 * @return an {@link Enumeration} of all certificates
+	 */
+	public Enumeration<String> getCertificates() {
+		try {
+			return appKeyStore.aliases();
+		} catch (KeyStoreException e) {
+			// this should never happen, however...
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Get a certificate for a given alias.
+	 *
+	 * @param alias the certificate's alias as returned by {@link getCertificates}.
+	 *
+	 * @return the certificate associated with the alias or <tt>null</tt> if none found.
+	 */
+	public Certificate getCertificate(String alias) {
+		try {
+			return appKeyStore.getCertificate(alias);
+		} catch (KeyStoreException e) {
+			// this should never happen, however...
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Removes the given certificate from MTMs key store.
+	 *
+	 * <p>
+	 * <b>WARNING</b>: this does not immediately invalidate the certificate. It is
+	 * well possible that (a) data is transmitted over still existing connections or
+	 * (b) new connections are created using TLS renegotiation, without a new cert
+	 * check.
+	 * </p>
+	 * @param alias the certificate's alias as returned by {@link getCertificates}.
+	 *
+	 * @throws KeyStoreException if the certificate could not be deleted.
+	 */
+	public void deleteCertificate(String alias) throws KeyStoreException {
+		appKeyStore.deleteEntry(alias);
+		keyStoreUpdated();
+	}
+
 	X509TrustManager getTrustManager(KeyStore ks) {
 		try {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
@@ -253,6 +302,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 			return;
 		}
 		
+		keyStoreUpdated();
+	}
+
+	void keyStoreUpdated() {
 		// reload appTrustManager
 		appTrustManager = getTrustManager(appKeyStore);
 
@@ -381,9 +434,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 		for (X509Certificate c : chain) {
 			si.append("\n\n");
 			si.append(c.getSubjectDN().toString());
-			si.append("\nMD5: ");
-			si.append(certHash(c, "MD5"));
-			si.append("\nSHA1: ");
+			si.append("\nSHA-256: ");
+			si.append(certHash(c, "SHA-256"));
+			si.append("\nSHA-1: ");
 			si.append(certHash(c, "SHA-1"));
 			si.append("\nSigned by: ");
 			si.append(c.getIssuerDN().toString());
@@ -391,7 +444,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
-	void startActivityNotification(Intent intent, String certName) {
+	void startActivityNotification(Intent intent, int decisionId, String certName) {
 		Notification n = new Notification(android.R.drawable.ic_lock_lock,
 				master.getString(R.string.mtm_notification),
 				System.currentTimeMillis());
@@ -401,7 +454,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				certName, call);
 		n.flags |= Notification.FLAG_AUTO_CANCEL;
 
-		notificationManager.notify(NOTIFICATION_ID, n);
+		notificationManager.notify(NOTIFICATION_ID + decisionId, n);
 	}
 
 	/**
@@ -435,7 +488,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 					getUI().startActivity(ni);
 				} catch (Exception e) {
 					LOGGER.log(Level.SEVERE, "startActivity: " + e, e);
-					startActivityNotification(ni, certMessage);
+					startActivityNotification(ni, myId, certMessage);
 				}
 			}
 		});

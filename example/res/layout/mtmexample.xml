@@ -32,5 +32,12 @@
 		android:text="Please enter a HTTPS URL and press 'Connect'!"
 		android:textSize="11pt"
 		/>
+	<Button
+		android:id="@+id/manage" 
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:text="Clean up Certificates"
+		android:onClick="onManage"
+		/>
 </LinearLayout>
 
