@@ -366,7 +366,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 					defaultTrustManager.checkClientTrusted(chain, authType);
 			} catch (CertificateException e) {
 				e.printStackTrace();
-				interact(chain, authType, e);
+				interactCert(chain, authType, e);
 			}
 		}
 	}
@@ -465,13 +465,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return (foregroundAct != null) ? foregroundAct : master;
 	}
 
-	void interact(final X509Certificate[] chain, String authType, CertificateException cause)
-		throws CertificateException
-	{
+	int interact(final String message) {
 		/* prepare the MTMDecision blocker object */
 		MTMDecision choice = new MTMDecision();
 		final int myId = createDecisionId(choice);
-		final String certMessage = certChainMessage(chain, cause);
 
 		masterHandler.post(new Runnable() {
 			public void run() {
@@ -479,7 +476,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				ni.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
 				ni.putExtra(DECISION_INTENT_ID, myId);
-				ni.putExtra(DECISION_INTENT_CERT, certMessage);
+				ni.putExtra(DECISION_INTENT_CERT, message);
 
 				// we try to directly start the activity and fall back to
 				// making a notification
@@ -487,7 +484,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 					getUI().startActivity(ni);
 				} catch (Exception e) {
 					Log.e(TAG, "startActivity: " + e);
-					startActivityNotification(ni, myId, certMessage);
+					startActivityNotification(ni, myId, message);
 				}
 			}
 		});
@@ -500,7 +497,13 @@ public class MemorizingTrustManager implements X509TrustManager {
 			e.printStackTrace();
 		}
 		Log.d(TAG, "finished wait on " + myId + ": " + choice.state);
-		switch (choice.state) {
+		return choice.state;
+	}
+	
+	void interactCert(final X509Certificate[] chain, String authType, CertificateException cause)
+			throws CertificateException
+	{
+		switch (interact(certChainMessage(chain, cause))) {
 		case MTMDecision.DECISION_ALWAYS:
 			storeCert(chain);
 		case MTMDecision.DECISION_ONCE:
