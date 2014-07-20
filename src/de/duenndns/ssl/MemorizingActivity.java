@@ -37,6 +37,7 @@ public class MemorizingActivity extends Activity
 	final static String TAG = "MemorizingActivity";
 
 	int decisionId;
+	AlertDialog dialog;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -52,13 +53,21 @@ public class MemorizingActivity extends Activity
 		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
 		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
 		Log.d(TAG, "data: " + i.getData());
-		new AlertDialog.Builder(this).setTitle(R.string.mtm_accept_cert)
+		dialog = new AlertDialog.Builder(this).setTitle(R.string.mtm_accept_cert)
 			.setMessage(cert)
 			.setPositiveButton(R.string.mtm_decision_always, this)
 			.setNeutralButton(R.string.mtm_decision_once, this)
 			.setNegativeButton(R.string.mtm_decision_abort, this)
 			.setOnCancelListener(this)
-			.create().show();
+			.create();
+		dialog.show();
+	}
+
+	@Override
+	protected void onPause() {
+		if (dialog.isShowing())
+			dialog.dismiss();
+		super.onPause();
 	}
 
 	void sendDecision(int decision) {
