@@ -422,6 +422,18 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
+	private void certDetails(StringBuffer si, X509Certificate c) {
+		si.append("\n");
+		si.append(c.getSubjectDN().toString());
+		si.append("\nSHA-256: ");
+		si.append(certHash(c, "SHA-256"));
+		si.append("\nSHA-1: ");
+		si.append(certHash(c, "SHA-1"));
+		si.append("\nSigned by: ");
+		si.append(c.getIssuerDN().toString());
+		si.append("\n");
+	}
+	
 	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
 		Throwable e = cause;
 		Log.d(TAG, "certChainMessage for " + e);
@@ -429,17 +441,14 @@ public class MemorizingTrustManager implements X509TrustManager {
 		if (e.getCause() != null) {
 			e = e.getCause();
 			si.append(e.getLocalizedMessage());
-			//si.append("\n");
+			si.append("\n");
 		}
+		si.append("\n");
+		si.append(master.getString(R.string.mtm_connect_anyway));
+		si.append("\n\n");
+		si.append(master.getString(R.string.mtm_cert_details));
 		for (X509Certificate c : chain) {
-			si.append("\n\n");
-			si.append(c.getSubjectDN().toString());
-			si.append("\nSHA-256: ");
-			si.append(certHash(c, "SHA-256"));
-			si.append("\nSHA-1: ");
-			si.append(certHash(c, "SHA-1"));
-			si.append("\nSigned by: ");
-			si.append(c.getIssuerDN().toString());
+			certDetails(si, c);
 		}
 		return si.toString();
 	}
