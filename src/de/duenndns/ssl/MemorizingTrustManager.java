@@ -74,6 +74,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 	final static String DECISION_TITLE_ID      = DECISION_INTENT + ".titleId";
 	private final static int NOTIFICATION_ID = 100509;
 
+	final static String NO_TRUST_ANCHOR = "Trust anchor for certification path not found.";
+	
 	static String KEYSTORE_DIR = "KeyStore";
 	static String KEYSTORE_FILE = "KeyStore.bks";
 
@@ -482,7 +484,12 @@ public class MemorizingTrustManager implements X509TrustManager {
 		StringBuffer si = new StringBuffer();
 		if (e.getCause() != null) {
 			e = e.getCause();
-			si.append(e.getLocalizedMessage());
+			// HACK: there is no sane way to check if the error is a "trust anchor
+			// not found", so we use string comparison.
+			if (NO_TRUST_ANCHOR.equals(e.getMessage())) {
+				si.append(master.getString(R.string.mtm_trust_anchor));
+			} else
+				si.append(e.getLocalizedMessage());
 			si.append("\n");
 		}
 		si.append("\n");
