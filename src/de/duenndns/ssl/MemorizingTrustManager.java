@@ -44,6 +44,7 @@ import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
@@ -466,9 +467,14 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
+	SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
 	private void certDetails(StringBuffer si, X509Certificate c) {
 		si.append("\n");
 		si.append(c.getSubjectDN().toString());
+		si.append("\n");
+		si.append(validityDateFormater.format(c.getNotBefore()));
+		si.append(" - ");
+		si.append(validityDateFormater.format(c.getNotAfter()));
 		si.append("\nSHA-256: ");
 		si.append(certHash(c, "SHA-256"));
 		si.append("\nSHA-1: ");
