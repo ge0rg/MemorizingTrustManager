@@ -44,8 +44,13 @@ import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Locale;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -254,6 +259,33 @@ public class MemorizingTrustManager implements X509TrustManager {
 		keyStoreUpdated();
 	}
 
+	/**
+	 * Creates a new hostname verifier supporting user interaction.
+	 *
+	 * <p>This method creates a new {@link HostnameVerifier} that is bound to
+	 * the given instance of {@link MemorizingTrustManager}, and leverages an
+	 * existing {@link HostnameVerifier}. The returned verifier performs the
+	 * following steps, returning as soon as one of them succeeds:
+	 *  </p>
+	 *  <ol>
+	 *  <li>Success, if the wrapped defaultVerifier accepts the certificate.</li>
+	 *  <li>Success, if the server certificate is stored in the keystore under the given hostname.</li>
+	 *  <li>Ask the user and return accordingly.</li>
+	 *  <li>Failure on exception.</li>
+	 *  </ol>
+	 *
+	 * @param defaultVerifier the {@link HostnameVerifier} that should perform the actual check
+	 * @return a new hostname verifier using the MTM's key store
+	 *
+	 * @throws IllegalArgumentException if the defaultVerifier parameter is null
+	 */
+	public HostnameVerifier wrapHostnameVerifier(final HostnameVerifier defaultVerifier) {
+		if (defaultVerifier == null)
+			throw new IllegalArgumentException("The default verifier may not be null");
+		
+		return new MemorizingHostnameVerifier(defaultVerifier);
+	}
+	
 	X509TrustManager getTrustManager(KeyStore ks) {
 		try {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
@@ -291,6 +323,16 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return ks;
 	}
 
+	void storeCert(String alias, Certificate cert) {
+		try {
+			appKeyStore.setCertificateEntry(alias, cert);
+		} catch (KeyStoreException e) {
+			Log.e(TAG, "storeCert(" + cert + ")", e);
+			return;
+		}		
+		keyStoreUpdated();
+	}
+	
 	void storeCert(X509Certificate[] chain) {
 		// add all certs from chain to appKeyStore
 		try {
@@ -453,6 +495,40 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
+	private String hostNameMessage(X509Certificate cert, String hostname) {
+		StringBuffer si = new StringBuffer();
+
+		si.append(master.getString(R.string.mtm_hostname_mismatch, hostname));
+		si.append("\n\n");
+		try {
+			Collection<List<?>> sans = cert.getSubjectAlternativeNames();
+			if (sans == null) {
+				si.append(cert.getSubjectDN());
+				si.append("\n");
+			} else for (List<?> altName : sans) {
+				Object name = altName.get(1);
+				if (name instanceof String) {
+					si.append("[");
+					si.append((Integer)altName.get(0));
+					si.append("] ");
+					si.append(name);
+					si.append("\n");
+				}
+			}
+		} catch (CertificateParsingException e) {
+			e.printStackTrace();
+			si.append("<Parsing error: ");
+			si.append(e.getLocalizedMessage());
+			si.append(">\n");
+		}
+		si.append("\n");
+		si.append(master.getString(R.string.mtm_connect_anyway));
+		si.append("\n\n");
+		si.append(master.getString(R.string.mtm_cert_details));
+		certDetails(si, cert);
+		return si.toString();
+	}
+
 	void startActivityNotification(Intent intent, int decisionId, String certName) {
 		Notification n = new Notification(android.R.drawable.ic_lock_lock,
 				master.getString(R.string.mtm_notification),
@@ -524,6 +600,18 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
+	boolean interactHostname(X509Certificate cert, String hostname)
+	{
+		switch (interact(hostNameMessage(cert, hostname), R.string.mtm_accept_servername)) {
+		case MTMDecision.DECISION_ALWAYS:
+			storeCert(hostname, cert);
+		case MTMDecision.DECISION_ONCE:
+			return true;
+		default:
+			return false;
+		}
+	}
+
 	protected static void interactResult(int decisionId, int choice) {
 		MTMDecision d;
 		synchronized(openDecisions) {
@@ -539,5 +627,37 @@ public class MemorizingTrustManager implements X509TrustManager {
 			d.notify();
 		}
 	}
+	
+	class MemorizingHostnameVerifier implements HostnameVerifier {
+		private HostnameVerifier defaultVerifier;
+		
+		public MemorizingHostnameVerifier(HostnameVerifier wrapped) {
+			defaultVerifier = wrapped;
+		}
 
+		@Override
+		public boolean verify(String hostname, SSLSession session) {
+			Log.d(TAG, "hostname verifier for " + hostname + ", trying default verifier first");
+			// if the default verifier accepts the hostname, we are done
+			if (defaultVerifier.verify(hostname, session)) {
+				Log.d(TAG, "default verifier accepted " + hostname);
+				return true;
+			}
+			// otherwise, we check if the hostname is an alias for this cert in our keystore
+			try {
+				X509Certificate cert = (X509Certificate)session.getPeerCertificates()[0];
+				//Log.d(TAG, "cert: " + cert);
+				if (cert.equals(appKeyStore.getCertificate(hostname.toLowerCase(Locale.US)))) {
+					Log.d(TAG, "certificate for " + hostname + " is in our keystore. accepting.");
+					return true;
+				} else {
+					Log.d(TAG, "server " + hostname + " provided wrong certificate, asking user.");
+					return interactHostname(cert, hostname);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+	}
 }
