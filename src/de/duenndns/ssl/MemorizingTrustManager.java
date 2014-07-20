@@ -66,6 +66,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	final static String DECISION_INTENT_ID     = DECISION_INTENT + ".decisionId";
 	final static String DECISION_INTENT_CERT   = DECISION_INTENT + ".cert";
 	final static String DECISION_INTENT_CHOICE = DECISION_INTENT + ".decisionChoice";
+	final static String DECISION_TITLE_ID      = DECISION_INTENT + ".titleId";
 	private final static int NOTIFICATION_ID = 100509;
 
 	static String KEYSTORE_DIR = "KeyStore";
@@ -465,7 +466,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return (foregroundAct != null) ? foregroundAct : master;
 	}
 
-	int interact(final String message) {
+	int interact(final String message, final int titleId) {
 		/* prepare the MTMDecision blocker object */
 		MTMDecision choice = new MTMDecision();
 		final int myId = createDecisionId(choice);
@@ -477,6 +478,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				ni.setData(Uri.parse(MemorizingTrustManager.class.getName() + "/" + myId));
 				ni.putExtra(DECISION_INTENT_ID, myId);
 				ni.putExtra(DECISION_INTENT_CERT, message);
+				ni.putExtra(DECISION_TITLE_ID, titleId);
 
 				// we try to directly start the activity and fall back to
 				// making a notification
@@ -503,7 +505,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	void interactCert(final X509Certificate[] chain, String authType, CertificateException cause)
 			throws CertificateException
 	{
-		switch (interact(certChainMessage(chain, cause))) {
+		switch (interact(certChainMessage(chain, cause), R.string.mtm_accept_cert)) {
 		case MTMDecision.DECISION_ALWAYS:
 			storeCert(chain);
 		case MTMDecision.DECISION_ONCE:

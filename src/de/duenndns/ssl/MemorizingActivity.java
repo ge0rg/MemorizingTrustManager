@@ -50,10 +50,11 @@ public class MemorizingActivity extends Activity
 		super.onResume();
 		Intent i = getIntent();
 		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
+		int titleId = i.getIntExtra(MemorizingTrustManager.DECISION_TITLE_ID, R.string.mtm_accept_cert);
 		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
 		Log.d(TAG, "onResume with " + i.getExtras() + " decId=" + decisionId);
 		Log.d(TAG, "data: " + i.getData());
-		dialog = new AlertDialog.Builder(this).setTitle(R.string.mtm_accept_cert)
+		dialog = new AlertDialog.Builder(this).setTitle(titleId)
 			.setMessage(cert)
 			.setPositiveButton(R.string.mtm_decision_always, this)
 			.setNeutralButton(R.string.mtm_decision_once, this)
