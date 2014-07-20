@@ -34,7 +34,6 @@ public class MTMExample extends Activity implements OnClickListener
 	MemorizingTrustManager mtm;
 	
 	TextView content;
-	CheckBox verifyhost;
 	HostnameVerifier defaultverifier;
 	EditText urlinput;
 	String text;
@@ -53,7 +52,6 @@ public class MTMExample extends Activity implements OnClickListener
 		findViewById(R.id.connect).setOnClickListener(this);
 		content = (TextView)findViewById(R.id.content);
 		urlinput = (EditText)findViewById(R.id.url);
-		verifyhost = (CheckBox)findViewById(R.id.verifyhost);
 
 		// register handler for background thread
 		hdlr = new Handler();
@@ -69,7 +67,8 @@ public class MTMExample extends Activity implements OnClickListener
 			sc.init(null, new X509TrustManager[] { mtm },
 					new java.security.SecureRandom());
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-			defaultverifier = HttpsURLConnection.getDefaultHostnameVerifier();
+			HttpsURLConnection.setDefaultHostnameVerifier(
+					mtm.wrapHostnameVerifier(HttpsURLConnection.getDefaultHostnameVerifier()));
 
 			// disable redirects to reduce possible confusion
 			HttpsURLConnection.setFollowRedirects(false);
@@ -94,12 +93,6 @@ public class MTMExample extends Activity implements OnClickListener
 	 * @param urlString a HTTPS URL to connect to.
 	 */
 	void connect(final String urlString) {
-		// register the right hostname verifier
-		if (verifyhost.isChecked()) {
-			HttpsURLConnection.setDefaultHostnameVerifier(defaultverifier);
-		} else {
-			HttpsURLConnection.setDefaultHostnameVerifier(new org.apache.http.conn.ssl.AllowAllHostnameVerifier());
-		}
 		new Thread() {
 			public void run() {
 				try {
