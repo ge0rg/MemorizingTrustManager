@@ -92,7 +92,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	private X509TrustManager defaultTrustManager;
 	private X509TrustManager appTrustManager;
 
-	/** Creates an instance of the MemorizingTrustManager class.
+	/** Creates an instance of the MemorizingTrustManager class that falls back to a custom TrustManager.
 	 *
 	 * You need to supply the application context. This has to be one of:
 	 *    - Application
@@ -103,16 +103,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * notification and for obtaining translated strings.
 	 *
 	 * @param m Context for the application.
-	 * @param appTrustManager Delegate trust management to this TM first.
-	 * @param defaultTrustManager Delegate trust management to this TM second, if non-null.
+	 * @param defaultTrustManager Delegate trust management to this TM. If null, the user must accept every certificate.
 	 */
-	public MemorizingTrustManager(Context m, X509TrustManager appTrustManager, X509TrustManager defaultTrustManager) {
+	public MemorizingTrustManager(Context m, X509TrustManager defaultTrustManager) {
 		init(m);
-		this.appTrustManager = appTrustManager;
+		this.appTrustManager = getTrustManager(appKeyStore);
 		this.defaultTrustManager = defaultTrustManager;
 	}
 
-	/** Creates an instance of the MemorizingTrustManager class.
+	/** Creates an instance of the MemorizingTrustManager class using the system X509TrustManager.
 	 *
 	 * You need to supply the application context. This has to be one of:
 	 *    - Application
@@ -404,7 +403,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			}
 			try {
 				if (defaultTrustManager == null)
-					throw new CertificateException();
+					throw ae;
 				Log.d(TAG, "checkCertTrusted: trying defaultTrustManager");
 				if (isServer)
 					defaultTrustManager.checkServerTrusted(chain, authType);
