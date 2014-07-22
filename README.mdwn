@@ -13,6 +13,7 @@ and the source code is available under the MIT license.
 
 ![MemorizingTrustManager dialog](mtm-screenshot.png)
 ![MemorizingTrustManager notification](mtm-notification.png)
+![MemorizingTrustManager server name dialog](mtm-servername.png)
 
 ## Status
 
@@ -42,11 +43,13 @@ Then add a library project dependency to `default.properties`:
 
 ### 2. Add the MTM (popup) Activity to your manifest
 
-Edit your `AndroidManifest.xml` and add the MTM activity line right before the
+Edit your `AndroidManifest.xml` and add the MTM activity element right before the
 end of your closing `</application>` tag.
 
 			...
-			<activity android:name="de.duenndns.ssl.MemorizingActivity" />
+			<activity android:name="de.duenndns.ssl.MemorizingActivity"
+				android:theme="@android:style/Theme.Translucent.NoTitleBar"
+				/>
 		</application>
 	</manifest>
 
@@ -56,15 +59,22 @@ Hooking MemorizingTrustmanager in HTTPS connections:
 
 	// register MemorizingTrustManager for HTTPS
 	SSLContext sc = SSLContext.getInstance("TLS");
-	sc.init(null, MemorizingTrustManager.getInstanceList(this), new java.security.SecureRandom());
+	MemorizingTrustManager mtm = new MemorizingTrustManager(this);
+	sc.init(null, new X509TrustManager[] { mtm }, new java.security.SecureRandom());
 	HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+	HttpsURLConnection.setDefaultHostnameVerifier(
+		mtm.wrapHostnameVerifier(HttpsURLConnection.getDefaultHostnameVerifier()));
+
 
 Or, for aSmack you can use `setCustomSSLContext()`:
 
 	org.jivesoftware.smack.ConnectionConfiguration connectionConfiguration = …
 	SSLContext sc = SSLContext.getInstance("TLS");
-	sc.init(null, MemorizingTrustManager.getInstanceList(application), new java.security.SecureRandom());
+	MemorizingTrustManager mtm = new MemorizingTrustManager(this);
+	sc.init(null, new X509TrustManager[] { mtm }, new java.security.SecureRandom());
 	connectionConfiguration.setCustomSSLContext(sc);
+	connectionConfiguration.setHostnameVerifier(
+		mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()));
 
 ### 4. Profit!
 
