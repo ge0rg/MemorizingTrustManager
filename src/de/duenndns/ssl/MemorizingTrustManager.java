@@ -466,8 +466,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
 	private void certDetails(StringBuffer si, X509Certificate c) {
+		SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		si.append("\n");
 		si.append(c.getSubjectDN().toString());
 		si.append("\n");
