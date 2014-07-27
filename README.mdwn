@@ -76,6 +76,21 @@ Or, for aSmack you can use `setCustomSSLContext()`:
 	connectionConfiguration.setHostnameVerifier(
 		mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier()));
 
+By default, MTM falls back to the system `TrustManager` before asking the user.
+If you do not trust the establishment, you can enforce a dialog on *every new
+connection* by supplying a `defaultTrustManager = null` parameter to the
+constructor:
+
+	MemorizingTrustManager mtm = new MemorizingTrustManager(this, null);
+
+If you want to use a different underlying `TrustManager`, like
+[AndroidPinning](https://github.com/moxie0/AndroidPinning), just supply that to
+MTM's constructor:
+
+	X509TrustManager pinning = new PinningTrustManager(SystemKeyStore.getInstance(),
+		new String[] {"f30012bbc18c231ac1a44b788e410ce754182513"}, 0);
+	MemorizingTrustManager mtm = new MemorizingTrustManager(this, pinning);
+
 ### 4. Profit!
 
 ## Alternatives
