@@ -335,17 +335,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 		keyStoreUpdated();
 	}
 	
-	void storeCert(X509Certificate[] chain) {
-		// add all certs from chain to appKeyStore
-		try {
-			for (X509Certificate c : chain)
-				appKeyStore.setCertificateEntry(c.getSubjectDN().toString(), c);
-		} catch (KeyStoreException e) {
-			Log.e(TAG, "storeCert(" + chain + ")", e);
-			return;
-		}
-		
-		keyStoreUpdated();
+	void storeCert(X509Certificate cert) {
+		storeCert(cert.getSubjectDN().toString(), cert);
 	}
 
 	void keyStoreUpdated() {
@@ -604,7 +595,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	{
 		switch (interact(certChainMessage(chain, cause), R.string.mtm_accept_cert)) {
 		case MTMDecision.DECISION_ALWAYS:
-			storeCert(chain);
+			storeCert(chain[0]); // only store the server cert, not the whole chain
 		case MTMDecision.DECISION_ONCE:
 			break;
 		default:
