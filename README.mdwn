@@ -110,3 +110,6 @@ pinning of server certificates, improving security against government-scale
 MitM attacks. Use this if your app is made to communicate with a specific
 server!
 
+## Contribute
+
+Please [help translating MTM into more languages](https://translations.launchpad.net/yaxim/master/+pots/mtm/)!
