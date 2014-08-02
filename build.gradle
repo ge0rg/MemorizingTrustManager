@@ -10,8 +10,13 @@ buildscript {
 apply plugin: 'android-library'
 
 android {
-	compileSdkVersion 7
+	compileSdkVersion 19
 	buildToolsVersion "19.1.0"
+	defaultConfig {
+		minSdkVersion 7
+		targetSdkVersion 19
+	}
+
 
 	sourceSets {
 		main {
