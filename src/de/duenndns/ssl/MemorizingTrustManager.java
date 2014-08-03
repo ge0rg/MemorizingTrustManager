@@ -484,7 +484,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 			// not found", so we use string comparison.
 			if (NO_TRUST_ANCHOR.equals(e.getMessage())) {
 				si.append(master.getString(R.string.mtm_trust_anchor));
-			} else
+			} else if (isExpiredException(e))
+				si.append(master.getString(R.string.mtm_cert_expired));
+			else
 				si.append(e.getLocalizedMessage());
 			si.append("\n");
 		}
