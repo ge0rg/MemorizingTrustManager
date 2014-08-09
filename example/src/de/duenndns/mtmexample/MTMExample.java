@@ -43,6 +43,9 @@ public class MTMExample extends Activity implements OnClickListener
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		if (!JULHandler.isInitialized()) {
+			throw new IllegalStateException("JULHandler not initialized");
+		}
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.mtmexample);
 
