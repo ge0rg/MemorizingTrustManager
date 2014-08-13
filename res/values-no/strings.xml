@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mtm_accept_cert">Godta ukjent sertifikat?</string>
+    <string name="mtm_trust_anchor">Sertifikatet er ikke utstilt av en kjent utstiller (CA).</string>
+    <string name="mtm_accept_servername">Godta feil servernavn?</string>
+    <string name="mtm_hostname_mismatch">Serveren heter ikke \"%s\". Sertifikatet gjelder bare for: </string>
+
+    <string name="mtm_connect_anyway">Vil du bruke serveren likevel?</string>
+    <string name="mtm_cert_details">Sertifikatdetaljer:</string>
+
+    <string name="mtm_decision_always">Alltid</string>
+    <string name="mtm_decision_once">En gang</string>
+    <string name="mtm_decision_abort">Avbryt</string>
+
+    <string name="mtm_notification">Sertifikat-sjekk</string>
+</resources>
