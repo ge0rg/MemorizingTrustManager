@@ -542,6 +542,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
+	// We can use Notification.Builder once MTM's minSDK is >= 11
+	@SuppressWarnings("deprecation")
 	void startActivityNotification(Intent intent, int decisionId, String certName) {
 		Notification n = new Notification(android.R.drawable.ic_lock_lock,
 				master.getString(R.string.mtm_notification),
