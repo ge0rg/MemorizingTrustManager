@@ -189,7 +189,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * Removes an Activity from the MTM display stack.
 	 *
 	 * Always call this function when the Activity added with
-	 * @see bindDisplayActivity is hidden.
+	 * {@link #bindDisplayActivity(Activity)} is hidden.
 	 *
 	 * @param act Activity to be unbound
 	 */
@@ -230,7 +230,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	/**
 	 * Get a certificate for a given alias.
 	 *
-	 * @param alias the certificate's alias as returned by {@link getCertificates}.
+	 * @param alias the certificate's alias as returned by {@link #getCertificates()}.
 	 *
 	 * @return the certificate associated with the alias or <tt>null</tt> if none found.
 	 */
@@ -252,7 +252,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	 * (b) new connections are created using TLS renegotiation, without a new cert
 	 * check.
 	 * </p>
-	 * @param alias the certificate's alias as returned by {@link getCertificates}.
+	 * @param alias the certificate's alias as returned by {@link #getCertificates()}.
 	 *
 	 * @throws KeyStoreException if the certificate could not be deleted.
 	 */
