@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mtm_accept_cert">Ziurtagiri ezezaguna onartu?</string>
+    <string name="mtm_trust_anchor">Zerbitzariaren ziurtagiria ez dago Ziurtagiri-emaile Autoritate ezagun batez sinatuta.</string>
+    <string name="mtm_cert_expired">Zerbitzariaren ziurtagiria iraungi da.</string>
+    <string name="mtm_accept_servername">Zerbitzariaren izeneko desadostasuna onartu?</string>
+    <string name="mtm_hostname_mismatch">Zerbitzaria ezin izan da \&quot;%s\&quot; bezala autentifikatu. Ziurtagiria soilik honetarako baliagarria da:</string>
+
+    <string name="mtm_connect_anyway">Konektatu hala ere?</string>
+    <string name="mtm_cert_details">Ziurtagiriaren xehetasunak:</string>
+
+    <string name="mtm_decision_always">Beti</string>
+    <string name="mtm_decision_once">Behin</string>
+    <string name="mtm_decision_abort">Utzi</string>
+
+    <string name="mtm_notification">Ziurtagiriaren egiaztapena</string>
+</resources>
