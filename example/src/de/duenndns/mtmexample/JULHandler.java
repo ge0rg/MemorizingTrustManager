@@ -98,7 +98,7 @@ public class JULHandler extends Handler {
 		if (initialized) LOGGER.info("Initialzied java.util.logging logger");
 	}
 
-	public static void init(DebugLogSettings debugLogSettings) {
+	public static void setDebugLogSettings(DebugLogSettings debugLogSettings) {
 		sDebugLogSettings = debugLogSettings;
 	}
 
