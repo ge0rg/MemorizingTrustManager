@@ -17,20 +17,21 @@ import android.util.Log;
 /**
  * A <code>java.util.logging</code> (JUL) Handler for Android.
  * <p>
- * In order to initialize JULHandler, call {@link #initialize()}.
+ * If you want fine-grained control over MTM's logging, you can copy this
+ * class to your code base and call the static {@link #initialize()} method.
  * </p>
  * <p>
  * This JUL Handler passes log messages sent to JUL to the Android log, while
- * keeping the format and stack traces from eventually existing Exceptions. It
+ * keeping the format and stack traces of optionally supplied Exceptions. It
  * further allows to install a {@link DebugLogSettings} class via
- * {@link #setDebugLogSettings(DebugLogSettings)} that determines whenever JUL log messages of
+ * {@link #setDebugLogSettings(DebugLogSettings)} that determines whether JUL log messages of
  * level {@link java.util.logging.Level#FINE} or lower are logged. This gives
  * the application developer more control over the logged messages, while
  * allowing a library developer to place debug log messages without risking to
  * spam the Android log.
  * </p>
  * <p>
- * If there are no {@code DebugLogSettings} configured, then all messages send
+ * If there are no {@code DebugLogSettings} configured, then all messages sent
  * to JUL will be logged.
  * </p>
  * 
@@ -40,6 +41,8 @@ import android.util.Log;
 @SuppressWarnings("deprecation")
 public class JULHandler extends Handler {
 
+	/** Implement this interface to toggle debug logging.
+	 */
 	public interface DebugLogSettings {
 		public boolean isDebugLogEnabled();
 	}
@@ -64,6 +67,7 @@ public class JULHandler extends Handler {
 );
 // @formatter:on
 
+	// Constants for Android vs. JUL debug level comparisons
 	private static final int FINE_INT = Level.FINE.intValue();
 	private static final int INFO_INT = Level.INFO.intValue();
 	private static final int WARN_INT = Level.WARNING.intValue();
@@ -71,6 +75,7 @@ public class JULHandler extends Handler {
 
 	private static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
 
+	// This formatter creates output similar to Android's Log.x
 	private static final Formatter FORMATTER = new Formatter() {
 		@Override
 		public String format(LogRecord logRecord) {
@@ -142,6 +147,7 @@ public class JULHandler extends Handler {
 		Log.println(priority, tag, msg);
 	}
 
+	// Helper to convert JUL verbosity levels to Android's Log
 	private static int getAndroidPriority(Level level) {
 		int value = level.intValue();
 		if (value >= SEVE_INT) {
@@ -155,6 +161,7 @@ public class JULHandler extends Handler {
 		}
 	}
 
+	// Helper to extract short class names
 	private static String substringAfterLastDot(String s) {
 		return s.substring(s.lastIndexOf('.') + 1).trim();
 	}
