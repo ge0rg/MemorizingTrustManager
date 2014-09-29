@@ -321,7 +321,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			ks.load(null, null);
 			ks.load(new java.io.FileInputStream(keyStoreFile), "MTM".toCharArray());
 		} catch (java.io.FileNotFoundException e) {
-			LOGGER.log(Level.SEVERE, "getAppKeyStore(" + keyStoreFile + ") - file does not exist");
+			LOGGER.log(Level.INFO, "getAppKeyStore(" + keyStoreFile + ") - file does not exist");
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "getAppKeyStore(" + keyStoreFile + ")", e);
 		}
