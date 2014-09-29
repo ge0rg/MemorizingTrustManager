@@ -404,7 +404,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			}
 			try {
 				if (defaultTrustManager == null)
-				throw ae;
+					throw ae;
 				LOGGER.log(Level.FINE, "checkCertTrusted: trying defaultTrustManager");
 				if (isServer)
 					defaultTrustManager.checkServerTrusted(chain, authType);
