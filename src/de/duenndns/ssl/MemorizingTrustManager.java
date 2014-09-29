@@ -586,7 +586,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				try {
 					getUI().startActivity(ni);
 				} catch (Exception e) {
-					LOGGER.log(Level.SEVERE, "startActivity: " + e, e);
+					LOGGER.log(Level.FINE, "startActivity(MemorizingActivity)", e);
 					startActivityNotification(ni, myId, message);
 				}
 			}
