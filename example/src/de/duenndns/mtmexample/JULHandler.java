@@ -23,7 +23,7 @@ import android.util.Log;
  * This JUL Handler passes log messages sent to JUL to the Android log, while
  * keeping the format and stack traces from eventually existing Exceptions. It
  * further allows to install a {@link DebugLogSettings} class via
- * {@link #init(DebugLogSettings)} that determines whenever JUL log messages of
+ * {@link #setDebugLogSettings(DebugLogSettings)} that determines whenever JUL log messages of
  * level {@link java.util.logging.Level#FINE} or lower are logged. This gives
  * the application developer more control over the logged messages, while
  * allowing a library developer to place debug log messages without risking to
