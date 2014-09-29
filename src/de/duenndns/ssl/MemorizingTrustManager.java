@@ -393,6 +393,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			else
 				appTrustManager.checkClientTrusted(chain, authType);
 		} catch (CertificateException ae) {
+			LOGGER.log(Level.FINER, "checkCertTrusted: appTrustManager failed", ae);
 			// if the cert is stored in our appTrustManager, we ignore expiredness
 			if (isExpiredException(ae)) {
 				LOGGER.log(Level.INFO, "checkCertTrusted: accepting expired certificate from keystore");
@@ -411,7 +412,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				else
 					defaultTrustManager.checkClientTrusted(chain, authType);
 			} catch (CertificateException e) {
-				LOGGER.log(Level.FINER, "Certificate exception in checkCertTrusted");
+				LOGGER.log(Level.FINER, "checkCertTrusted: defaultTrustManager failed", e);
 				interactCert(chain, authType, e);
 			}
 		}
