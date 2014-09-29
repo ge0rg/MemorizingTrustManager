@@ -17,6 +17,9 @@ import android.util.Log;
 /**
  * A <code>java.util.logging</code> (JUL) Handler for Android.
  * <p>
+ * In order to initialize JULHandler, call {@link #initialize()}.
+ * </p>
+ * <p>
  * This JUL Handler passes log messages sent to JUL to the Android log, while
  * keeping the format and stack traces from eventually existing Exceptions. It
  * further allows to install a {@link DebugLogSettings} class via
@@ -88,7 +91,7 @@ public class JULHandler extends Handler {
 	private static DebugLogSettings sDebugLogSettings;
 	private static boolean initialized = false;
 
-	static {
+	public static void initialize() {
 		try {
 			LogManager.getLogManager().readConfiguration(LOG_MANAGER_CONFIG);
 			initialized = true;
@@ -99,6 +102,7 @@ public class JULHandler extends Handler {
 	}
 
 	public static void setDebugLogSettings(DebugLogSettings debugLogSettings) {
+		if (!isInitialized()) initialize();
 		sDebugLogSettings = debugLogSettings;
 	}
 
