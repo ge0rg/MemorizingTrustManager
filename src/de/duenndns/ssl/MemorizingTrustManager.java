@@ -470,19 +470,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 	private void certDetails(StringBuffer si, X509Certificate c) {
 		SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
-		si.append("\n");
-		si.append(c.getSubjectDN().toString());
-		si.append("\n");
-		si.append(validityDateFormater.format(c.getNotBefore()));
-		si.append(" - ");
-		si.append(validityDateFormater.format(c.getNotAfter()));
-		si.append("\nSHA-256: ");
-		si.append(certHash(c, "SHA-256"));
-		si.append("\nSHA-1: ");
-		si.append(certHash(c, "SHA-1"));
-		si.append("\nSigned by: ");
-		si.append(c.getIssuerDN().toString());
-		si.append("\n");
+        	String subject = c.getSubjectDN().toString();
+        	String domain = subject.substring(subject.indexOf("CN=") + 3, subject.indexOf(","));
+        	String signedBy = subject.substring(subject.indexOf("OU=") + 3);
+        	signedBy = signedBy.substring(0, signedBy.indexOf(","));
+
+		si.append("\nDomain: "+domain);
+        	si.append("\nCA: "+signedBy);
+		si.append("\nDate: "+validityDateFormater.format(c.getNotBefore())+" - "+validityDateFormater.format(c.getNotAfter()));
+		si.append("\nSHA-256: "+certHash(c, "SHA-256")+"\n\n");
 	}
 	
 	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
@@ -503,8 +499,11 @@ public class MemorizingTrustManager implements X509TrustManager {
 		si.append(master.getString(R.string.mtm_connect_anyway));
 		si.append("\n\n");
 		si.append(master.getString(R.string.mtm_cert_details));
+		int certNumber = 1;
 		for (X509Certificate c : chain) {
+			si.append("Certificate #"+certNumber+":");
 			certDetails(si, c);
+			certNumber++;
 		}
 		return si.toString();
 	}
