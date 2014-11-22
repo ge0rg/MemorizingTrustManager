@@ -16,7 +16,9 @@ android {
         	minSdkVersion 7
 		targetSdkVersion 19
 	}
-
+	lintOptions {
+      		abortOnError false
+   	}
 	sourceSets {
 		main {
 			manifest.srcFile 'AndroidManifest.xml'
