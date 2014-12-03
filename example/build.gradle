@@ -1,15 +1,15 @@
-apply plugin: 'android'
+apply plugin: 'com.android.application'
 
 dependencies {
 	compile rootProject
 }
 
 android {
-	compileSdkVersion 19
-	buildToolsVersion "19.1"
+	compileSdkVersion 21
+	buildToolsVersion "21.1.1"
 	defaultConfig {
-        	minSdkVersion 7
-		targetSdkVersion 19
+		minSdkVersion 7
+		targetSdkVersion 21
 	}
 
 	sourceSets {
