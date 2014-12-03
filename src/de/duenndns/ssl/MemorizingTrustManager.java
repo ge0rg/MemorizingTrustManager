@@ -78,8 +78,6 @@ public class MemorizingTrustManager implements X509TrustManager {
 	final static String DECISION_TITLE_ID      = DECISION_INTENT + ".titleId";
 	private final static int NOTIFICATION_ID = 100509;
 
-	final static String NO_TRUST_ANCHOR = "Trust anchor for certification path not found.";
-	
 	static String KEYSTORE_DIR = "KeyStore";
 	static String KEYSTORE_FILE = "KeyStore.bks";
 
@@ -382,6 +380,15 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return false;
 	}
 
+	private boolean isPathException(Throwable e) {
+		do {
+			if (e instanceof CertPathValidatorException)
+				return true;
+			e = e.getCause();
+		} while (e != null);
+		return false;
+	}
+
 	public void checkCertTrusted(X509Certificate[] chain, String authType, boolean isServer)
 		throws CertificateException
 	{
@@ -489,17 +496,17 @@ public class MemorizingTrustManager implements X509TrustManager {
 		Throwable e = cause;
 		LOGGER.log(Level.FINE, "certChainMessage for " + e);
 		StringBuffer si = new StringBuffer();
-		if (e.getCause() != null) {
-			e = e.getCause();
-			// HACK: there is no sane way to check if the error is a "trust anchor
-			// not found", so we use string comparison.
-			if (NO_TRUST_ANCHOR.equals(e.getMessage())) {
-				si.append(master.getString(R.string.mtm_trust_anchor));
-			} else
-				si.append(e.getLocalizedMessage());
-			si.append("\n");
+		if (isPathException(e))
+			si.append(master.getString(R.string.mtm_trust_anchor));
+		else if (isExpiredException(e))
+			si.append(master.getString(R.string.mtm_cert_expired));
+		else {
+			// get to the cause
+			while (e.getCause() != null)
+				e = e.getCause();
+			si.append(e.getLocalizedMessage());
 		}
-		si.append("\n");
+		si.append("\n\n");
 		si.append(master.getString(R.string.mtm_connect_anyway));
 		si.append("\n\n");
 		si.append(master.getString(R.string.mtm_cert_details));
