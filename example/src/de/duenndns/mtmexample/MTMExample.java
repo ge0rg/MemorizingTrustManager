@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -47,6 +48,14 @@ public class MTMExample extends Activity implements OnClickListener
 		requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setContentView(R.layout.mtmexample);
 
+		// use checkbox to enable/disable debugging in JUL
+		final CheckBox enableDebug = (CheckBox)findViewById(R.id.debug);
+		JULHandler.setDebugLogSettings(new JULHandler.DebugLogSettings() {
+			@Override
+			public boolean isDebugLogEnabled() {
+				return enableDebug.isChecked();
+			}
+		});
 
 		// set up gui elements
 		findViewById(R.id.connect).setOnClickListener(this);

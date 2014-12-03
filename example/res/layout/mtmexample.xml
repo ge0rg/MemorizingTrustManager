@@ -9,6 +9,7 @@
 		android:layout_height="wrap_content" 
 		android:hint="HTTPS address"
 		android:text="https://op-co.de/mtm/"
+		android:inputType="textUri"
 		android:singleLine="true"
 		/>
 	<Button
@@ -17,6 +18,16 @@
 		android:layout_height="wrap_content" 
 		android:text="Connect"
 		/>
+
+	<CheckBox
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="Enable LogCat Debug"
+		android:id="@+id/debug"
+		android:layout_margin="4dip"
+		android:checked="true"
+		/>
+
 	<TextView
 		android:id="@+id/content" 
 		android:layout_width="fill_parent" 
