@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mtm_accept_cert">是否接受未知的证书?</string>
+    <string name="mtm_trust_anchor">服务器证书没有被签名</string>
+    <string name="mtm_cert_expired">The server certificate is expired.</string>
+    <string name="mtm_accept_servername">是否接受不匹配的服务器名</string>
+    <string name="mtm_hostname_mismatch">服务器不能给\"%s\"授权. 证书只对:有效</string>
+
+    <string name="mtm_connect_anyway">Do you want to connect anyway?</string>
+    <string name="mtm_cert_details">证书详情</string>
+
+    <string name="mtm_decision_always">总是</string>
+    <string name="mtm_decision_once">一次</string>
+    <string name="mtm_decision_abort">放弃</string>
+
+    <string name="mtm_notification">证书验证</string>
+</resources>

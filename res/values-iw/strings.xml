@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mtm_accept_cert">לקבל תעודה לא מוכרת?</string>
+    <string name="mtm_trust_anchor">תעודת השרת אינה חתומה על ידי Certificate Authority מוכר.</string>
+    <string name="mtm_cert_expired">The server certificate is expired.</string>
+    <string name="mtm_accept_servername">לקבל שם שרת לא תואם?</string>
+    <string name="mtm_hostname_mismatch">שרת לא היה מסוגל לאמת בתור \"%s\". התעודה הינה ברת תוקף רק עבור:</string>
+
+    <string name="mtm_connect_anyway">האם ברצונך להתחבר בכל אופן?</string>
+    <string name="mtm_cert_details">פרטי תעודה:</string>
+
+    <string name="mtm_decision_always">תמיד</string>
+    <string name="mtm_decision_once">פעם אחת</string>
+    <string name="mtm_decision_abort">נטוש</string>
+
+    <string name="mtm_notification">אימות תעודה</string>
+</resources>

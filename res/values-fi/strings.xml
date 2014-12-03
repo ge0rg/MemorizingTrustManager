@@ -2,6 +2,7 @@
 <resources>
     <string name="mtm_accept_cert">Hyväksytäänkö palvelimen antama tuntematon varmenne?</string>
     <string name="mtm_trust_anchor">Palvelimen varmenne ei ole tunnetun varmentajan (CA) allekirjoittama.</string>
+    <string name="mtm_cert_expired">The server certificate is expired.</string>
     <string name="mtm_accept_servername">Sallitaanko palvelimen nimi, joka ei vastaa varmeenteessa olevaa nimeä?</string>
     <string name="mtm_hostname_mismatch">Palvelimella ei ole varmennetta nimelle \"%s\". Varmenteen sisältämät nimet:</string>
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mtm_accept_cert">Bilinmeyen Sertifikayı Kabul Ediyor musunuz?</string>
+    <string name="mtm_trust_anchor">Sunucu Sertifikası bilinen bir Sertifika Otoritesi tarafından imzalanmamıştır.</string>
+    <string name="mtm_cert_expired">The server certificate is expired.</string>
+    <string name="mtm_accept_servername">Eşleşmeyen Sunucu İsmi Kabul Edilsin mi?</string>
+    <string name="mtm_hostname_mismatch">Sunucu \"%s\" olarak kimliğini teyit edemedi. Sertifika sadece şunun için geçerlidir:</string>
+
+    <string name="mtm_connect_anyway">Gene de bağlanmak istiyor musunuz?</string>
+    <string name="mtm_cert_details">Sertifika detayları:</string>
+
+    <string name="mtm_decision_always">Daima</string>
+    <string name="mtm_decision_once">Bir defa</string>
+    <string name="mtm_decision_abort">İptal</string>
+
+    <string name="mtm_notification">Sertifika Teyidi</string>
+</resources>
