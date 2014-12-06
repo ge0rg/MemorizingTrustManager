@@ -291,6 +291,13 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return new MemorizingHostnameVerifier(defaultVerifier);
 	}
 	
+	public HostnameVerifier wrapHostnameVerifierNonInteractive(final HostnameVerifier defaultVerifier) {
+		if (defaultVerifier == null)
+			throw new IllegalArgumentException("The default verifier may not be null");
+		
+		return new NonInteractiveMemorizingHostnameVerifier(defaultVerifier);
+	}
+	
 	X509TrustManager getTrustManager(KeyStore ks) {
 		try {
 			TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
@@ -382,7 +389,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return false;
 	}
 
-	public void checkCertTrusted(X509Certificate[] chain, String authType, boolean isServer)
+	public void checkCertTrusted(X509Certificate[] chain, String authType, boolean isServer, boolean interactive)
 		throws CertificateException
 	{
 		LOGGER.log(Level.FINE, "checkCertTrusted(" + chain + ", " + authType + ", " + isServer + ")");
@@ -412,8 +419,12 @@ public class MemorizingTrustManager implements X509TrustManager {
 				else
 					defaultTrustManager.checkClientTrusted(chain, authType);
 			} catch (CertificateException e) {
-				LOGGER.log(Level.FINER, "checkCertTrusted: defaultTrustManager failed", e);
-				interactCert(chain, authType, e);
+				e.printStackTrace();
+				if (interactive) {
+					interactCert(chain, authType, e);
+				} else {
+					throw e;
+				}
 			}
 		}
 	}
@@ -421,13 +432,13 @@ public class MemorizingTrustManager implements X509TrustManager {
 	public void checkClientTrusted(X509Certificate[] chain, String authType)
 		throws CertificateException
 	{
-		checkCertTrusted(chain, authType, false);
+		checkCertTrusted(chain, authType, false,true);
 	}
 
 	public void checkServerTrusted(X509Certificate[] chain, String authType)
 		throws CertificateException
 	{
-		checkCertTrusted(chain, authType, true);
+		checkCertTrusted(chain, authType, true,true);
 	}
 
 	public X509Certificate[] getAcceptedIssuers()
@@ -650,8 +661,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			defaultVerifier = wrapped;
 		}
 
-		@Override
-		public boolean verify(String hostname, SSLSession session) {
+		protected boolean verify(String hostname, SSLSession session, boolean interactive) {
 			LOGGER.log(Level.FINE, "hostname verifier for " + hostname + ", trying default verifier first");
 			// if the default verifier accepts the hostname, we are done
 			if (defaultVerifier.verify(hostname, session)) {
@@ -667,12 +677,59 @@ public class MemorizingTrustManager implements X509TrustManager {
 					return true;
 				} else {
 					LOGGER.log(Level.FINE, "server " + hostname + " provided wrong certificate, asking user.");
-					return interactHostname(cert, hostname);
+					if (interactive) {
+						return interactHostname(cert, hostname);
+					} else {
+						return false;
+					}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				return false;
 			}
 		}
+		
+		@Override
+		public boolean verify(String hostname, SSLSession session) {
+			return verify(hostname, session, true);
+		}
+	}
+	
+	class NonInteractiveMemorizingHostnameVerifier extends MemorizingHostnameVerifier {
+
+		public NonInteractiveMemorizingHostnameVerifier(HostnameVerifier wrapped) {
+			super(wrapped);
+		}
+		@Override
+		public boolean verify(String hostname, SSLSession session) {
+			return verify(hostname, session, true);
+		}
+		
+		
+	}
+	
+	public X509TrustManager getNonInteractive() {
+		return new NonInteractiveMemorizingTrustManager();
+	}
+	
+	private class NonInteractiveMemorizingTrustManager implements X509TrustManager {
+
+		@Override
+		public void checkClientTrusted(X509Certificate[] chain, String authType)
+				throws CertificateException {
+			MemorizingTrustManager.this.checkCertTrusted(chain, authType, false, false);
+		}
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] chain, String authType)
+				throws CertificateException {
+			MemorizingTrustManager.this.checkCertTrusted(chain, authType, true, false);
+		}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers() {
+			return MemorizingTrustManager.this.getAcceptedIssuers();
+		}
+		
 	}
 }
