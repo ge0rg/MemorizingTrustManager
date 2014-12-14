@@ -9,3 +9,7 @@ tags
 .classpath
 .gradle
 .*.swp
+
+.idea
+
+*.iml
