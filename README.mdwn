@@ -29,7 +29,17 @@ a look into the demo application in the `example` directory.
 
 ### 1. Add MTM to your project
 
-Download the MTM source from GitHub, or add it as a
+Define a dependency in your gradle build file
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        compile 'de.duenndns:memorizing-trust-manager:0.9'
+    }
+
+or download the MTM source from GitHub, or add it as a
 [git submodule](http://git-scm.com/docs/git-submodule):
 
 	# plain download:
