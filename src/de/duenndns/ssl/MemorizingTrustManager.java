@@ -39,6 +39,7 @@ import android.util.SparseArray;
 import android.os.Handler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.cert.*;
 import java.security.KeyStore;
@@ -317,14 +318,24 @@ public class MemorizingTrustManager implements X509TrustManager {
 			LOGGER.log(Level.SEVERE, "getAppKeyStore()", e);
 			return null;
 		}
+        FileInputStream fis = null;
 		try {
 			ks.load(null, null);
-			ks.load(new java.io.FileInputStream(keyStoreFile), "MTM".toCharArray());
+            fis = new FileInputStream(keyStoreFile);
+            ks.load(fis, "MTM".toCharArray());
 		} catch (java.io.FileNotFoundException e) {
 			LOGGER.log(Level.INFO, "getAppKeyStore(" + keyStoreFile + ") - file does not exist");
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "getAppKeyStore(" + keyStoreFile + ")", e);
-		}
+		} finally {
+            if(fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "getAppKeyStore(" + keyStoreFile + ")", e);
+                }
+            }
+        }
 		return ks;
 	}
 
