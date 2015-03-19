@@ -55,7 +55,7 @@ end of your closing `</application>` tag.
 
 ### 3. Hook MTM as the default TrustManager for your connection type
 
-Hooking MemorizingTrustmanager in HTTPS connections:
+Hooking MemorizingTrustmanager in **HTTPS connections**:
 
 	// register MemorizingTrustManager for HTTPS
 	SSLContext sc = SSLContext.getInstance("TLS");
@@ -65,8 +65,23 @@ Hooking MemorizingTrustmanager in HTTPS connections:
 	HttpsURLConnection.setDefaultHostnameVerifier(
 		mtm.wrapHostnameVerifier(HttpsURLConnection.getDefaultHostnameVerifier()));
 
+For **SSLSocket** you should do the following:
 
-Or, for aSmack you can use `setCustomSSLContext()`:
+	// register MemorizingTrustManager for all SSLSockets
+	SSLContext sc = SSLContext.getInstance("TLS");
+	MemorizingTrustManager mtm = new MemorizingTrustManager(this);
+	HostnameVerifier hv = mtm.wrapHostnameVerifier(new org.apache.http.conn.ssl.StrictHostnameVerifier());
+	sc.init(null, new X509TrustManager[] { mtm }, new java.security.SecureRandom());
+	SSLContext.setDefault(sc);
+	
+	// connect a socket
+	SSLSocket s = ...;
+	s.startHandshake();
+	if (!hv.verify(your_domain_name, sslSocket.getSession())) {
+	    throw new CertificateException("Server failed to authenticate as " + your_domain_name);
+	}
+
+Or, for **Smack** you can use `setCustomSSLContext()`:
 
 	org.jivesoftware.smack.ConnectionConfiguration connectionConfiguration = …
 	SSLContext sc = SSLContext.getInstance("TLS");
