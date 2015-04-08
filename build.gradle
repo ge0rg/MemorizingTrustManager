@@ -1,13 +1,16 @@
 buildscript {
 	repositories {
 		mavenCentral()
+		jcenter()
 	}
 	dependencies {
-		classpath 'com.android.tools.build:gradle:0.14.+'
+		classpath 'com.android.tools.build:gradle:1.0.0'
+		classpath 'com.novoda:bintray-release:0.2.5'
 	}
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'bintray-release'
 
 android {
 	compileSdkVersion 21
@@ -28,5 +31,16 @@ android {
 			assets.srcDirs = ['assets']
 		}
 	}
+}
 
+publish {
+	bintrayUser = project.hasProperty("bintray_user") ? bintray_user : ''
+	bintrayKey = project.hasProperty("bintray_api_key") ? bintray_api_key : ''
+	groupId = 'de.duenndns'
+	artifactId = 'memorizing-trust-manager'
+	version = '0.9'
+	description = 'A memorizing trust manager for android'
+	website = 'https://github.com/ge0rg/MemorizingTrustManager'
+	licences = ['MIT']
+	dryRun = false
 }

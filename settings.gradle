@@ -1,1 +1,3 @@
 include ':example'
+
+rootProject.name = "memorizing-trust-manager"
