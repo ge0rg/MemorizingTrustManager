@@ -1,0 +1,4 @@
+<project name="mtm_custom_android_rules">
+  <property name="java.target" value="1.7" />
+  <property name="java.source" value="1.7" />
+</project>
