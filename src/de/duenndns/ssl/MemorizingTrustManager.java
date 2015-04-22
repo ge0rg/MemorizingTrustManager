@@ -39,11 +39,14 @@ import android.util.SparseArray;
 import android.os.Handler;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.text.SimpleDateFormat;
@@ -317,11 +320,23 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 		try {
 			ks.load(null, null);
-			ks.load(new java.io.FileInputStream(keyStoreFile), "MTM".toCharArray());
-		} catch (java.io.FileNotFoundException e) {
-			LOGGER.log(Level.INFO, "getAppKeyStore(" + keyStoreFile + ") - file does not exist");
-		} catch (Exception e) {
+		} catch (NoSuchAlgorithmException | CertificateException | IOException e) {
 			LOGGER.log(Level.SEVERE, "getAppKeyStore(" + keyStoreFile + ")", e);
+		}
+		InputStream is = null;
+		try {
+			is = new java.io.FileInputStream(keyStoreFile);
+			ks.load(is, "MTM".toCharArray());
+		} catch (NoSuchAlgorithmException | CertificateException | IOException e) {
+			LOGGER.log(Level.INFO, "getAppKeyStore(" + keyStoreFile + ") - exception loading file key store");
+		} finally {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (IOException e) {
+					LOGGER.log(Level.FINE, "getAppKeyStore(" + keyStoreFile + ") - exception closing file key store input stream");
+				}
+			}
 		}
 		return ks;
 	}
