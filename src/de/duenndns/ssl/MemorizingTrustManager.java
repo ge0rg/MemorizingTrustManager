@@ -468,7 +468,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	}
 
 	private static String hexString(byte[] data) {
-		StringBuffer si = new StringBuffer();
+		StringBuilder si = new StringBuilder();
 		for (int i = 0; i < data.length; i++) {
 			si.append(String.format("%02x", data[i]));
 			if (i < data.length - 1)
@@ -489,7 +489,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	private static void certDetails(StringBuffer si, X509Certificate c) {
+	private static void certDetails(StringBuilder si, X509Certificate c) {
 		SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		si.append("\n");
 		si.append(c.getSubjectDN().toString());
@@ -509,7 +509,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
 		Throwable e = cause;
 		LOGGER.log(Level.FINE, "certChainMessage for " + e);
-		StringBuffer si = new StringBuffer();
+		StringBuilder si = new StringBuilder();
 		if (isPathException(e))
 			si.append(master.getString(R.string.mtm_trust_anchor));
 		else if (isExpiredException(e))
@@ -531,7 +531,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	}
 
 	private String hostNameMessage(X509Certificate cert, String hostname) {
-		StringBuffer si = new StringBuffer();
+		StringBuilder si = new StringBuilder();
 
 		si.append(master.getString(R.string.mtm_hostname_mismatch, hostname));
 		si.append("\n\n");
