@@ -39,7 +39,6 @@ import android.util.SparseArray;
 import android.os.Handler;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.cert.*;
@@ -386,7 +385,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	private boolean isExpiredException(Throwable e) {
+	private static boolean isExpiredException(Throwable e) {
 		do {
 			if (e instanceof CertificateExpiredException)
 				return true;
@@ -395,7 +394,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return false;
 	}
 
-	private boolean isPathException(Throwable e) {
+	private static boolean isPathException(Throwable e) {
 		do {
 			if (e instanceof CertPathValidatorException)
 				return true;
@@ -458,7 +457,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return defaultTrustManager.getAcceptedIssuers();
 	}
 
-	private int createDecisionId(MTMDecision d) {
+	private static int createDecisionId(MTMDecision d) {
 		int myId;
 		synchronized(openDecisions) {
 			myId = decisionId;
@@ -490,7 +489,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	private void certDetails(StringBuffer si, X509Certificate c) {
+	private static void certDetails(StringBuffer si, X509Certificate c) {
 		SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		si.append("\n");
 		si.append(c.getSubjectDN().toString());
@@ -545,7 +544,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				Object name = altName.get(1);
 				if (name instanceof String) {
 					si.append("[");
-					si.append((Integer)altName.get(0));
+					si.append(altName.get(0));
 					si.append("] ");
 					si.append(name);
 					si.append("\n");
