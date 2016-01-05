@@ -1,4 +1,11 @@
 <project name="mtm_custom_android_rules">
   <property name="java.target" value="1.7" />
   <property name="java.source" value="1.7" />
+  <target name="-pre-build">
+    <copy todir="${jar.libs.dir}">
+      <fileset
+        dir="${sdk.dir}/extras/android/support/v4"
+        includes="*.jar" />
+    </copy>
+  </target>
 </project>

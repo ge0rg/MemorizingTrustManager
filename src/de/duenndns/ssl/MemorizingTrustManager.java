@@ -38,6 +38,8 @@ import android.net.Uri;
 import android.util.SparseArray;
 import android.os.Handler;
 
+import android.support.v4.app.NotificationCompat;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -566,19 +568,16 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
-	// We can use Notification.Builder once MTM's minSDK is >= 11
-	@SuppressWarnings("deprecation")
 	void startActivityNotification(Intent intent, int decisionId, String certName) {
-		Notification n = new Notification(android.R.drawable.ic_lock_lock,
-				master.getString(R.string.mtm_notification),
-				System.currentTimeMillis());
 		PendingIntent call = PendingIntent.getActivity(master, 0, intent, 0);
-		n.setLatestEventInfo(master.getApplicationContext(),
-				master.getString(R.string.mtm_notification),
-				certName, call);
-		n.flags |= Notification.FLAG_AUTO_CANCEL;
-
-		notificationManager.notify(NOTIFICATION_ID + decisionId, n);
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(getUI());
+		builder.setSmallIcon(android.R.drawable.ic_lock_lock)
+			.setContentTitle(master.getString(R.string.mtm_notification))
+			.setContentText(certName)
+			.setAutoCancel(true).setWhen(System.currentTimeMillis())
+			.setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
+			.setContentIntent(call);
+		notificationManager.notify(NOTIFICATION_ID + decisionId, builder.build());
 	}
 
 	/**
