@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ public class MTMExample extends Activity implements OnClickListener
 	TextView content;
 	HostnameVerifier defaultverifier;
 	EditText urlinput;
+	CheckBox background;
 	String text;
 	Handler hdlr;
 
@@ -52,6 +54,7 @@ public class MTMExample extends Activity implements OnClickListener
 		findViewById(R.id.connect).setOnClickListener(this);
 		content = (TextView)findViewById(R.id.content);
 		urlinput = (EditText)findViewById(R.id.url);
+		background = (CheckBox)findViewById(R.id.background);
 
 		// register handler for background thread
 		hdlr = new Handler();
@@ -116,6 +119,10 @@ public class MTMExample extends Activity implements OnClickListener
 		String url = urlinput.getText().toString();
 		setText("Loading " + url, true);
 		setProgressBarIndeterminateVisibility(true);
+		// depending on checkbox, either bind MTM to no UI or to MTMExample
+		// Applications should call bindDisplayActivity() in onResume() and
+		// unbindDisplayActivity() in onPause() for a smooth workflow.
+		mtm.bindDisplayActivity(background.isChecked() ? null : this);
 		connect(url);
 	}
 	
