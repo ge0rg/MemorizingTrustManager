@@ -36,11 +36,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.SparseArray;
+import android.os.Build;
 import android.os.Handler;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -566,19 +569,70 @@ public class MemorizingTrustManager implements X509TrustManager {
 		return si.toString();
 	}
 
-	// We can use Notification.Builder once MTM's minSDK is >= 11
-	@SuppressWarnings("deprecation")
-	void startActivityNotification(Intent intent, int decisionId, String certName) {
-		Notification n = new Notification(android.R.drawable.ic_lock_lock,
-				master.getString(R.string.mtm_notification),
-				System.currentTimeMillis());
-		PendingIntent call = PendingIntent.getActivity(master, 0, intent, 0);
-		n.setLatestEventInfo(master.getApplicationContext(),
-				master.getString(R.string.mtm_notification),
-				certName, call);
-		n.flags |= Notification.FLAG_AUTO_CANCEL;
+	/**
+	 * Reflectively call
+	 * <code>Notification.setLatestEventInfo(Context, CharSequence, CharSequence, PendingIntent)</code>
+	 * since it was remove in Android API level 23.
+	 *
+	 * @param notification
+	 * @param context
+	 * @param mtmNotification
+	 * @param certName
+	 * @param call
+	 */
+	private static void setLatestEventInfoReflective(Notification notification,
+			Context context, CharSequence mtmNotification,
+			CharSequence certName, PendingIntent call) {
+		Method setLatestEventInfo;
+		try {
+			setLatestEventInfo = notification.getClass().getMethod(
+					"setLatestEventInfo", Context.class, CharSequence.class,
+					CharSequence.class, PendingIntent.class);
+		} catch (NoSuchMethodException e) {
+			throw new IllegalStateException(e);
+		}
 
-		notificationManager.notify(NOTIFICATION_ID + decisionId, n);
+		try {
+			setLatestEventInfo.invoke(notification, context, mtmNotification,
+					certName, call);
+		} catch (IllegalAccessException | IllegalArgumentException
+				| InvocationTargetException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	void startActivityNotification(Intent intent, int decisionId, String certName) {
+		Notification notification;
+		final PendingIntent call = PendingIntent.getActivity(master, 0, intent,
+				0);
+		final String mtmNotification = master.getString(R.string.mtm_notification);
+		final long currentMillis = System.currentTimeMillis();
+		final Context context = master.getApplicationContext();
+
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+			@SuppressWarnings("deprecation")
+			// Use an extra identifier for the legacy build notification, so
+			// that we suppress the deprecation warning. We will latter assign
+			// this to the correct identifier.
+			Notification n  = new Notification(android.R.drawable.ic_lock_lock,
+					mtmNotification,
+					currentMillis);
+			setLatestEventInfoReflective(n, context, mtmNotification, certName, call);
+			n.flags |= Notification.FLAG_AUTO_CANCEL;
+			notification = n;
+		} else {
+			notification = new Notification.Builder(master)
+					.setContentTitle(mtmNotification)
+					.setContentText(certName)
+					.setTicker(certName)
+					.setSmallIcon(android.R.drawable.ic_lock_lock)
+					.setWhen(currentMillis)
+					.setContentIntent(call)
+					.setAutoCancel(true)
+					.build();
+		}
+
+		notificationManager.notify(NOTIFICATION_ID + decisionId, notification);
 	}
 
 	/**
