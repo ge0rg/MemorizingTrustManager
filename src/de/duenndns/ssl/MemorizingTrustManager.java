@@ -661,7 +661,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 				// we try to directly start the activity and fall back to
 				// making a notification
 				try {
-					getUI().startActivity(ni);
+					foregroundAct.startActivity(ni);
 				} catch (Exception e) {
 					LOGGER.log(Level.FINE, "startActivity(MemorizingActivity)", e);
 					startActivityNotification(ni, myId, message);
