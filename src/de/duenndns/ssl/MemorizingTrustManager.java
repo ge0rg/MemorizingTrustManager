@@ -659,7 +659,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 				ni.putExtra(DECISION_TITLE_ID, titleId);
 
 				// we try to directly start the activity and fall back to
-				// making a notification
+				// making a notification. If no foreground activity is set
+				// (foregroundAct==null) or if the app developer set an
+				// invalid / expired activity, the catch-all fallback is
+				// deployed.
 				try {
 					foregroundAct.startActivity(ni);
 				} catch (Exception e) {
