@@ -26,6 +26,7 @@
  */
 package de.duenndns.ssl;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
@@ -601,6 +602,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	void startActivityNotification(Intent intent, int decisionId, String certName) {
 		Notification notification;
 		final PendingIntent call = PendingIntent.getActivity(master, 0, intent,
@@ -629,7 +631,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 					.setWhen(currentMillis)
 					.setContentIntent(call)
 					.setAutoCancel(true)
-					.build();
+					.getNotification();
 		}
 
 		notificationManager.notify(NOTIFICATION_ID + decisionId, notification);
