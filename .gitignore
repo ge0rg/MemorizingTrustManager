@@ -10,4 +10,4 @@ tags
 .gradle
 .*.swp
 /.settings
-/MemorizingTrustManager.iml
+/*.iml
