@@ -30,9 +30,10 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.Service;
 import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -90,6 +91,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	Context master;
 	Activity foregroundAct;
 	NotificationManager notificationManager;
+	private static final String CHANNEL_ID = "default";
 	private static int decisionId = 0;
 	private static SparseArray<MTMDecision> openDecisions = new SparseArray<MTMDecision>();
 
@@ -140,7 +142,19 @@ public class MemorizingTrustManager implements X509TrustManager {
 		master = m;
 		masterHandler = new Handler(m.getMainLooper());
 		notificationManager = (NotificationManager)master.getSystemService(Context.NOTIFICATION_SERVICE);
-
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationChannel channel = notificationManager.getNotificationChannel(CHANNEL_ID);
+			if (channel == null) {
+				channel = new NotificationChannel(CHANNEL_ID,
+						"Security",
+						NotificationManager.IMPORTANCE_DEFAULT);
+				channel.setDescription("Security messages");
+				channel.enableLights(true);
+				channel.enableVibration(true);
+				channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+				notificationManager.createNotificationChannel(channel);
+			}
+		}
 		Application app;
 		if (m instanceof Application) {
 			app = (Application)m;
@@ -623,7 +637,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 			n.flags |= Notification.FLAG_AUTO_CANCEL;
 			notification = n;
 		} else {
-			notification = new Notification.Builder(master)
+			Notification.Builder notificationBuilder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+					new Notification.Builder(master, CHANNEL_ID)
+					: new Notification.Builder(master);
+			notification = notificationBuilder
 					.setContentTitle(mtmNotification)
 					.setContentText(certName)
 					.setTicker(certName)
