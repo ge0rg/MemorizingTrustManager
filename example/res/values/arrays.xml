@@ -9,6 +9,6 @@
         <item>pinning-test.badssl.com</item>
         <item>no-common-name.badssl.com</item>
         <item>no-subject.badssl.com</item>
-        <item>incomplete-chain .badssl.com</item>
+        <item>incomplete-chain.badssl.com</item>
     </string-array>
 </resources>
