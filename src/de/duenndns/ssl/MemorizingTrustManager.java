@@ -490,10 +490,34 @@ public class MemorizingTrustManager implements X509TrustManager {
 		}
 	}
 
-	private static void certDetails(StringBuilder si, X509Certificate c) {
+	private void certDetails(StringBuilder si, X509Certificate c) {
 		SimpleDateFormat validityDateFormater = new SimpleDateFormat("yyyy-MM-dd");
 		si.append("\n");
-		si.append(c.getSubjectDN().toString());
+		si.append(master.getString(R.string.mtm_valid_for));
+		si.append("\n");
+		try {
+			Collection<List<?>> sans = c.getSubjectAlternativeNames();
+			if (sans == null) {
+				si.append(c.getSubjectDN());
+				si.append("\n");
+			} else for (List<?> altName : sans) {
+				Object name = altName.get(1);
+				if (name instanceof String) {
+					si.append("[");
+					si.append(altName.get(0));
+					si.append("] ");
+					si.append(name);
+					si.append("\n");
+				}
+			}
+		} catch (CertificateParsingException e) {
+			e.printStackTrace();
+			si.append("<Parsing error: ");
+			si.append(e.getLocalizedMessage());
+			si.append(">\n");
+		}
+		si.append("\n");
+		si.append(master.getString(R.string.mtm_cert_details));
 		si.append("\n");
 		si.append(validityDateFormater.format(c.getNotBefore()));
 		si.append(" - ");
@@ -522,9 +546,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 			si.append(e.getLocalizedMessage());
 		}
 		si.append("\n\n");
-		si.append(master.getString(R.string.mtm_connect_anyway));
+		si.append(master.getString(R.string.mtm_trust_certificte));
 		si.append("\n\n");
-		si.append(master.getString(R.string.mtm_cert_details));
 		for (X509Certificate c : chain) {
 			certDetails(si, c);
 		}
@@ -536,31 +559,8 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 		si.append(master.getString(R.string.mtm_hostname_mismatch, hostname));
 		si.append("\n\n");
-		try {
-			Collection<List<?>> sans = cert.getSubjectAlternativeNames();
-			if (sans == null) {
-				si.append(cert.getSubjectDN());
-				si.append("\n");
-			} else for (List<?> altName : sans) {
-				Object name = altName.get(1);
-				if (name instanceof String) {
-					si.append("[");
-					si.append(altName.get(0));
-					si.append("] ");
-					si.append(name);
-					si.append("\n");
-				}
-			}
-		} catch (CertificateParsingException e) {
-			e.printStackTrace();
-			si.append("<Parsing error: ");
-			si.append(e.getLocalizedMessage());
-			si.append(">\n");
-		}
-		si.append("\n");
-		si.append(master.getString(R.string.mtm_connect_anyway));
+		si.append(master.getString(R.string.mtm_accept_servername));
 		si.append("\n\n");
-		si.append(master.getString(R.string.mtm_cert_details));
 		certDetails(si, cert);
 		return si.toString();
 	}
@@ -682,7 +682,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	void interactCert(final X509Certificate[] chain, String authType, CertificateException cause)
 			throws CertificateException
 	{
-		switch (interact(certChainMessage(chain, cause), R.string.mtm_accept_cert)) {
+		switch (interact(certChainMessage(chain, cause), R.string.mtm_security_risk)) {
 		case MTMDecision.DECISION_ALWAYS:
 			storeCert(chain[0]); // only store the server cert, not the whole chain
 		case MTMDecision.DECISION_ONCE:
@@ -694,7 +694,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 	boolean interactHostname(X509Certificate cert, String hostname)
 	{
-		switch (interact(hostNameMessage(cert, hostname), R.string.mtm_accept_servername)) {
+		switch (interact(hostNameMessage(cert, hostname), R.string.mtm_security_risk)) {
 		case MTMDecision.DECISION_ALWAYS:
 			storeCert(hostname, cert);
 		case MTMDecision.DECISION_ONCE:
