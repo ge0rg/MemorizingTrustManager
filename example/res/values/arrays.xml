@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="url_values">
+        <item>expired.badssl.com</item>
+        <item>wrong.host.badssl.com</item>
+        <item>self-signed.badssl.com</item>
+        <item>untrusted-root.badssl.com</item>
+        <item>revoked.badssl.com</item>
+        <item>pinning-test.badssl.com</item>
+        <item>no-common-name.badssl.com</item>
+        <item>no-subject.badssl.com</item>
+        <item>incomplete-chain .badssl.com</item>
+    </string-array>
+</resources>

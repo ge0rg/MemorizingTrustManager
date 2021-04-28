@@ -8,9 +8,11 @@ import android.os.Handler;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.net.URL;
@@ -29,12 +31,14 @@ import de.duenndns.ssl.MemorizingTrustManager;
  * Example to demonstrate the use of MemorizingTrustManager on HTTPS
  * sockets.
  */
-public class MTMExample extends Activity implements OnClickListener
+public class MTMExample extends Activity
+		implements OnClickListener, AdapterView.OnItemSelectedListener
 {
 	MemorizingTrustManager mtm;
 	
 	TextView content;
 	HostnameVerifier defaultverifier;
+	Spinner url_spinner;
 	EditText urlinput;
 	CheckBox background;
 	String text;
@@ -53,6 +57,8 @@ public class MTMExample extends Activity implements OnClickListener
 		// set up gui elements
 		findViewById(R.id.connect).setOnClickListener(this);
 		content = (TextView)findViewById(R.id.content);
+		url_spinner = (Spinner)findViewById(R.id.url_spinner);
+		url_spinner.setOnItemSelectedListener(this);
 		urlinput = (EditText)findViewById(R.id.url);
 		background = (CheckBox)findViewById(R.id.background);
 
@@ -146,5 +152,14 @@ public class MTMExample extends Activity implements OnClickListener
 						}
 					})
 				.create().show();
+	}
+
+	@Override
+	public void onItemSelected(AdapterView<?> spinner, View selected, int pos, long id) {
+		urlinput.setText("https://" + spinner.getItemAtPosition(pos));
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> adapterView) {
 	}
 }

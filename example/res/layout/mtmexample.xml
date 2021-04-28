@@ -3,6 +3,13 @@
 	android:orientation="vertical"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent" >
+
+	<Spinner
+		android:id="@+id/url_spinner"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:entries="@array/url_values" />
+
 	<EditText
 		android:id="@+id/url" 
 		android:layout_width="fill_parent" 
