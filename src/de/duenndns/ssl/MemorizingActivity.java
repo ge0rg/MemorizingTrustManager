@@ -54,7 +54,7 @@ public class MemorizingActivity extends Activity
 		super.onResume();
 		Intent i = getIntent();
 		decisionId = i.getIntExtra(MemorizingTrustManager.DECISION_INTENT_ID, MTMDecision.DECISION_INVALID);
-		int titleId = i.getIntExtra(MemorizingTrustManager.DECISION_TITLE_ID, R.string.mtm_accept_cert);
+		int titleId = i.getIntExtra(MemorizingTrustManager.DECISION_TITLE_ID, R.string.mtm_security_risk);
 		String cert = i.getStringExtra(MemorizingTrustManager.DECISION_INTENT_CERT);
 		LOGGER.log(Level.FINE, "onResume with " + i.getExtras() + " decId=" + decisionId + " data: " + i.getData());
 		dialog = new AlertDialog.Builder(this).setTitle(titleId)
