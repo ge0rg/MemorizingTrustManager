@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.IDN;
 import java.security.cert.*;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -521,6 +522,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 					si.append(altName.get(0));
 					si.append("] ");
 					si.append(name);
+					String idn = IDN.toUnicode((String)name, IDN.ALLOW_UNASSIGNED);
+					if (!name.equals(idn)) {
+						si.append(" (").append(idn).append(")");
+					}
 					si.append("\n");
 				}
 			}
