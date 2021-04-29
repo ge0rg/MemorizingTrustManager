@@ -92,7 +92,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	Context master;
 	Activity foregroundAct;
 	NotificationManager notificationManager;
-	private static final String CHANNEL_ID = "default";
+	private static final String CHANNEL_ID = "memorizingtrustmanager";
 	private static int decisionId = 0;
 	private static SparseArray<MTMDecision> openDecisions = new SparseArray<MTMDecision>();
 
@@ -147,9 +147,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 			NotificationChannel channel = notificationManager.getNotificationChannel(CHANNEL_ID);
 			if (channel == null) {
 				channel = new NotificationChannel(CHANNEL_ID,
-						"Security",
+						m.getString(R.string.mtm_notification_channel),
 						NotificationManager.IMPORTANCE_DEFAULT);
-				channel.setDescription("Security messages");
+				channel.setDescription(m.getString(R.string.mtm_notification));
 				channel.enableLights(true);
 				channel.enableVibration(true);
 				channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
