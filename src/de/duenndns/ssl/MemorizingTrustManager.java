@@ -565,7 +565,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 			si.append(e.getLocalizedMessage());
 		}
 		si.append("\n\n");
-		si.append(master.getString(R.string.mtm_trust_certificte));
+		si.append(master.getString(R.string.mtm_trust_certificate));
 		si.append("\n\n");
 		for (X509Certificate c : chain) {
 			certDetails(si, c);

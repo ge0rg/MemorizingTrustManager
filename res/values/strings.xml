@@ -4,7 +4,7 @@
     <string name="mtm_trust_anchor">The server certificate is not signed by a known Certificate Authority.</string>
     <string name="mtm_cert_expired">The server certificate is expired.</string>
     <string name="mtm_hostname_mismatch">Server could not authenticate as \&quot;%s\&quot;.</string>
-    <string name="mtm_trust_certificte">Do you trust this certificte? It will be used to verify all listed names.</string>
+    <string name="mtm_trust_certificate">Do you trust this certificate? It will be used to verify all listed names.</string>
     <string name="mtm_accept_servername">Accept Mismatching Server Name?</string>
     <string name="mtm_cert_details">Certificate details:</string>
     <string name="mtm_valid_for">Certificate valid for:</string>
