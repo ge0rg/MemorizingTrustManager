@@ -21,6 +21,9 @@ android {
 		minSdkVersion 9
 		targetSdkVersion 29
 	}
+	lintOptions {
+		abortOnError false
+	}
 
 	sourceSets {
 		main {
