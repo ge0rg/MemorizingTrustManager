@@ -16,6 +16,7 @@ repositories {
 }
 
 android {
+	namespace "de.duenndns.ssl"
 	compileSdkVersion 29
 	defaultConfig {
 		minSdkVersion 9
