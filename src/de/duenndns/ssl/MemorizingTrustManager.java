@@ -37,6 +37,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.util.Log;
 import android.util.SparseArray;
 import android.os.Build;
 import android.os.Handler;
@@ -167,7 +168,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 
 		File dir = app.getDir(KEYSTORE_DIR, Context.MODE_PRIVATE);
 		keyStoreFile = new File(dir + File.separator + KEYSTORE_FILE);
-
+		LOGGER.log(Level.INFO, "init(): Using keyStoreFile " + keyStoreFile.getPath());
 		appKeyStore = loadAppKeyStore();
 	}
 
@@ -362,13 +363,14 @@ public class MemorizingTrustManager implements X509TrustManager {
 	void storeCert(String alias, Certificate cert) {
 		try {
 			appKeyStore.setCertificateEntry(alias, cert);
+			LOGGER.log(Level.INFO, "storeCert(" + alias + ")");
 		} catch (KeyStoreException e) {
 			LOGGER.log(Level.SEVERE, "storeCert(" + cert + ")", e);
 			return;
-		}		
+		}
 		keyStoreUpdated();
 	}
-	
+
 	void storeCert(X509Certificate cert) {
 		storeCert(cert.getSubjectDN().toString(), cert);
 	}
@@ -425,7 +427,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 	public void checkCertTrusted(X509Certificate[] chain, String authType, boolean isServer)
 		throws CertificateException
 	{
-		LOGGER.log(Level.FINE, "checkCertTrusted(" + chain + ", " + authType + ", " + isServer + ")");
+		LOGGER.log(Level.INFO, "checkCertTrusted(" + chain + ", " + authType + ", " + isServer + ")");
 		try {
 			LOGGER.log(Level.FINE, "checkCertTrusted: trying appTrustManager");
 			if (isServer)
@@ -549,7 +551,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		si.append(c.getIssuerDN().toString());
 		si.append("\n");
 	}
-	
+
 	private String certChainMessage(final X509Certificate[] chain, CertificateException cause) {
 		Throwable e = cause;
 		LOGGER.log(Level.FINE, "certChainMessage for " + e);
@@ -619,8 +621,12 @@ public class MemorizingTrustManager implements X509TrustManager {
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	void startActivityNotification(Intent intent, int decisionId, String certName) {
 		Notification notification;
-		final PendingIntent call = PendingIntent.getActivity(master, 0, intent,
-				0);
+		final PendingIntent call;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			call = PendingIntent.getActivity(master, 0, intent, PendingIntent.FLAG_MUTABLE);
+		} else {
+			call = PendingIntent.getActivity(master, 0, intent, 0);
+		}
 		final String mtmNotification = master.getString(R.string.mtm_notification);
 		final long currentMillis = System.currentTimeMillis();
 		final Context context = master.getApplicationContext();
@@ -683,9 +689,9 @@ public class MemorizingTrustManager implements X509TrustManager {
 				// invalid / expired activity, the catch-all fallback is
 				// deployed.
 				try {
-					foregroundAct.startActivity(ni);
+					getUI().startActivity(ni);
 				} catch (Exception e) {
-					LOGGER.log(Level.FINE, "startActivity(MemorizingActivity)", e);
+					LOGGER.log(Level.SEVERE, "startActivity(MemorizingActivity)", e);
 					startActivityNotification(ni, myId, message);
 				}
 			}
@@ -700,7 +706,7 @@ public class MemorizingTrustManager implements X509TrustManager {
 		LOGGER.log(Level.FINE, "finished wait on " + myId + ": " + choice.state);
 		return choice.state;
 	}
-	
+
 	void interactCert(final X509Certificate[] chain, String authType, CertificateException cause)
 			throws CertificateException
 	{
@@ -741,10 +747,10 @@ public class MemorizingTrustManager implements X509TrustManager {
 			d.notify();
 		}
 	}
-	
+
 	class MemorizingHostnameVerifier implements HostnameVerifier {
 		private HostnameVerifier defaultVerifier;
-		
+
 		public MemorizingHostnameVerifier(HostnameVerifier wrapped) {
 			defaultVerifier = wrapped;
 		}

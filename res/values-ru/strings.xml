@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="mtm_accept_cert">Принять неизвестный сертификат?</string>
     <string name="mtm_trust_anchor">Сертификат сервера не подписан известным центром сертификации.</string>
     <string name="mtm_cert_expired">Срок действия сертификата сервера истёк.</string>
     <string name="mtm_accept_servername">Принять несоответствующее имя сервера?</string>
     <string name="mtm_hostname_mismatch">Сервер не может аутентифицироваться как \&quot;%s\&quot;. Сертификат действителен только для:</string>
 
-    <string name="mtm_connect_anyway">Вы всё равно хотите подключиться?</string>
     <string name="mtm_cert_details">Сведения о сертификате:</string>
 
     <string name="mtm_decision_always">Всегда</string>

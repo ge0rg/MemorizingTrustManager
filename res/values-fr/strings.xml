@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="mtm_accept_cert">Accepter les certificats inconnus ?</string>
     <string name="mtm_trust_anchor">Le certificat du serveur n’est pas signé par une Autorité de Certification reconnue.</string>
     <string name="mtm_cert_expired">Le certificat a expiré.</string>
     <string name="mtm_accept_servername">Accepter le nom de serveur qui ne concorde pas ?</string>
     <string name="mtm_hostname_mismatch">Le serveur n\'a pas pu s\'authentifier comme « %s ». Le certificat est valide uniquement pour :</string>
 
-    <string name="mtm_connect_anyway">Voulez-vous vous connecter quand même ?</string>
     <string name="mtm_cert_details">Détails du certificat :</string>
 
     <string name="mtm_decision_always">Toujours</string>
