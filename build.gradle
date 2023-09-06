@@ -1,19 +1,4 @@
-buildscript {
-	repositories {
-		mavenCentral()
-		google()
-	}
-	dependencies {
-		classpath 'com.android.tools.build:gradle:4.1.3'
-	}
-}
-
 apply plugin: 'com.android.library'
-
-repositories {
-	mavenCentral()
-	google()
-}
 
 android {
 	namespace "de.duenndns.ssl"
